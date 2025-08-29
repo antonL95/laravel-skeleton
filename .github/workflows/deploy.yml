@@ -1,20 +1,20 @@
-#name: Trigger Coolify Deployment
-#
-#on:
-#  push:
-#    branches:
-#      - 'main'
-#  workflow_dispatch:
-#
-#jobs:
-#  trigger-deploy:
-#    runs-on: ubuntu-latest
-#
-#    steps:
-#      # Checkout the repository
-#      - name: Checkout code
-#        uses: actions/checkout@v3
-#
+name: Trigger Coolify Deployment
+
+on:
+  push:
+    branches:
+      - 'main'
+  workflow_dispatch:
+
+jobs:
+  trigger-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the repository
+      - name: Checkout code
+        uses: actions/checkout@v3
+
 #      # Trigger deployment in Coolify
 #      - name: Trigger Coolify Deployment
 #        run: |

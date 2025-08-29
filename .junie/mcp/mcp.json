@@ -1,0 +1,20 @@
+{
+    "mcpServers": {
+        "laravel-boost": {
+            "command": "/Users/anton/Library/Application Support/Herd/bin/php84",
+            "args": [
+                "/Users/anton/Developer/laravel-skeleton/artisan",
+                "boost:mcp"
+            ]
+        },
+        "herd": {
+            "command": "/Users/anton/Library/Application Support/Herd/bin/php84",
+            "args": [
+                "/Applications/Herd.app/Contents/Resources/herd-mcp.phar"
+            ],
+            "env": {
+                "SITE_PATH": "/Users/anton/Developer/laravel-skeleton"
+            }
+        }
+    }
+}

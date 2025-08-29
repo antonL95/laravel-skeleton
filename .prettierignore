@@ -1,0 +1,5 @@
+resources/js/components/ui/*
+resources/js/ziggy.js
+resources/views/mail/*
+resources/js/wayfinder
+resources/js/types/php-types.d.ts

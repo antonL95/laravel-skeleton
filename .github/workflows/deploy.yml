@@ -1,11 +1,11 @@
-name: Trigger Coolify Deployment
-
-on:
-  push:
-    branches:
-      - 'main'
-  workflow_dispatch:
-
+#name: Trigger Coolify Deployment
+#
+#on:
+#  push:
+#    branches:
+#      - 'main'
+#  workflow_dispatch:
+#
 #jobs:
 #  trigger-deploy:
 #    runs-on: ubuntu-latest

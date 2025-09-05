@@ -27,6 +27,7 @@ final class UserResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::Users;
 
+    #[\Override]
     public static function table(Table $table): Table
     {
         return $table
@@ -37,7 +38,7 @@ final class UserResource extends Resource
                     ->searchable(),
                 IconColumn::make('email_verified_at')
                     ->label('Email Verified')
-                    ->boolean(fn (User $record) => $record->email_verified_at !== null),
+                    ->boolean(fn (User $user): bool => $user->email_verified_at !== null),
                 TextColumn::make('created_at')
                     ->label('Registered')
                     ->sortable()

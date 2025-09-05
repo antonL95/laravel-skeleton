@@ -55,14 +55,14 @@ final readonly class CheckoutSessionController
         /** @var User $user */
         $user = $request->user();
 
-        /** @var string $sessionId */
-        $sessionId = $request->string('session_id', '');
+        /** @var string $stringable */
+        $stringable = $request->string('session_id', '');
 
-        if ($sessionId === '') {
+        if ($stringable === '') {
             return redirect(route('checkout.show'));
         }
 
-        $session = Cashier::stripe()->checkout->sessions->retrieve($sessionId);
+        $session = Cashier::stripe()->checkout->sessions->retrieve($stringable);
 
         if ($session->payment_status !== CheckoutStatus::PAID->value) {
             return redirect(route('checkout.show'));

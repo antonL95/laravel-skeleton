@@ -24,6 +24,7 @@ final class StripeProductResource extends Resource
 
     protected static string|UnitEnum|null $navigationGroup = 'Stripe';
 
+    #[\Override]
     public static function table(Table $table): Table
     {
         return $table

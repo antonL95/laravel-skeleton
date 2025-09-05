@@ -12,8 +12,8 @@ declare(strict_types=1);
 | need to change it using the "pest()" function to bind a different classes or traits.
 |
 */
-
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Saloon\Config;
 use Tests\TestCase;
 
 pest()->extend(TestCase::class)
@@ -24,7 +24,7 @@ pest()->extend(TestCase::class)
     ->use(RefreshDatabase::class)
     ->in('Browser');
 
-Saloon\Config::preventStrayRequests();
+Config::preventStrayRequests();
 
 /*
 |--------------------------------------------------------------------------
@@ -48,7 +48,7 @@ Saloon\Config::preventStrayRequests();
 |
 */
 
-function something()
+function something(): void
 {
     // ..
 }

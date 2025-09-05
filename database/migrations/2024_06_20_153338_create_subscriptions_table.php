@@ -13,19 +13,19 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('subscriptions', function (Blueprint $table): void {
-            $table->id();
-            $table->foreignId('user_id');
-            $table->string('type');
-            $table->string('stripe_id')->unique();
-            $table->string('stripe_status');
-            $table->string('stripe_price')->nullable();
-            $table->integer('quantity')->nullable();
-            $table->timestamp('trial_ends_at')->nullable();
-            $table->timestamp('ends_at')->nullable();
-            $table->timestamps();
+        Schema::create('subscriptions', function (Blueprint $blueprint): void {
+            $blueprint->id();
+            $blueprint->foreignId('user_id');
+            $blueprint->string('type');
+            $blueprint->string('stripe_id')->unique();
+            $blueprint->string('stripe_status');
+            $blueprint->string('stripe_price')->nullable();
+            $blueprint->integer('quantity')->nullable();
+            $blueprint->timestamp('trial_ends_at')->nullable();
+            $blueprint->timestamp('ends_at')->nullable();
+            $blueprint->timestamps();
 
-            $table->index(['user_id', 'stripe_status']);
+            $blueprint->index(['user_id', 'stripe_status']);
         });
     }
 

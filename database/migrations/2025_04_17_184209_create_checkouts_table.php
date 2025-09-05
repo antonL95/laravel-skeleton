@@ -10,13 +10,13 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('checkouts', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->foreignId('user_id')->constrained('users');
-            $table->string('price_id');
-            $table->string('checkout_session_id')->nullable();
-            $table->string('status');
-            $table->timestamps();
+        Schema::create('checkouts', function (Blueprint $blueprint): void {
+            $blueprint->uuid('id')->primary();
+            $blueprint->foreignId('user_id')->constrained('users');
+            $blueprint->string('price_id');
+            $blueprint->string('checkout_session_id')->nullable();
+            $blueprint->string('status');
+            $blueprint->timestamps();
         });
     }
 };

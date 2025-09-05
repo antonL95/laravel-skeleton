@@ -14,9 +14,9 @@ final readonly class SyncStripeProductsAction
     public function handle(): void
     {
         $stripe = Cashier::stripe();
-        $stripeProducts = $stripe->products->all(['limit' => 100]);
+        $collection = $stripe->products->all(['limit' => 100]);
 
-        foreach ($stripeProducts->data as $stripeProductData) {
+        foreach ($collection->data as $stripeProductData) {
             $prices = $stripe->prices->all(['product' => $stripeProductData->id, 'limit' => 1]);
 
             if (!empty($prices->data)) {

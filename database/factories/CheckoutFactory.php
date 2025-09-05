@@ -42,7 +42,7 @@ final class CheckoutFactory extends Factory
      */
     public function completed(): self
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn (array $attributes): array => [
             'status' => 'completed',
         ]);
     }
@@ -52,7 +52,7 @@ final class CheckoutFactory extends Factory
      */
     public function pending(): self
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn (array $attributes): array => [
             'status' => 'pending',
         ]);
     }
@@ -62,7 +62,7 @@ final class CheckoutFactory extends Factory
      */
     public function cancelled(): self
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn (array $attributes): array => [
             'status' => 'cancelled',
         ]);
     }

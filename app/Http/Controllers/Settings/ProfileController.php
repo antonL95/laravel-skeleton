@@ -23,11 +23,11 @@ final readonly class ProfileController
         ]);
     }
 
-    public function update(ProfileUpdateRequest $request): RedirectResponse
+    public function update(ProfileUpdateRequest $profileUpdateRequest): RedirectResponse
     {
         /** @var User $user */
-        $user = $request->user();
-        $user->fill($request->validated());
+        $user = $profileUpdateRequest->user();
+        $user->fill($profileUpdateRequest->validated());
 
         if ($user->isDirty('email')) {
             $user->email_verified_at = null;

@@ -6,9 +6,7 @@ use App\Models\User;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Support\Facades\Notification;
 
-uses(Illuminate\Foundation\Testing\RefreshDatabase::class);
-
-test('sends verification notification', function () {
+test('sends verification notification', function (): void {
     Notification::fake();
 
     $user = User::factory()->create([
@@ -22,7 +20,7 @@ test('sends verification notification', function () {
     Notification::assertSentTo($user, VerifyEmail::class);
 });
 
-test('does not send verification notification if email is verified', function () {
+test('does not send verification notification if email is verified', function (): void {
     Notification::fake();
 
     $user = User::factory()->create([

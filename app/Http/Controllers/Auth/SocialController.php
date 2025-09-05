@@ -65,17 +65,17 @@ final readonly class SocialController
         }
     }
 
-    private function findOrCreateProviderUser(SocialUser $socialiteUser, string $driver): SocialProviderUser|RedirectResponse
+    private function findOrCreateProviderUser(SocialUser $socialUser, string $driver): SocialProviderUser|RedirectResponse
     {
         $providerUser = SocialProviderUser::query()->where('provider_slug', $driver)
-            ->where('provider_user_id', $socialiteUser->getId())
+            ->where('provider_user_id', $socialUser->getId())
             ->first();
 
         if ($providerUser !== null) {
             return $providerUser;
         }
 
-        $user = User::query()->where('email', $socialiteUser->getEmail())->first();
+        $user = User::query()->where('email', $socialUser->getEmail())->first();
 
         if ($user !== null) {
             $existingProvider = $user->socialProviders()->first();
@@ -89,43 +89,43 @@ final readonly class SocialController
             }
         }
 
-        return DB::transaction(function () use ($socialiteUser, $driver, $user): SocialProviderUser {
-            $user ??= $this->createUser($socialiteUser);
+        return DB::transaction(function () use ($socialUser, $driver, $user): SocialProviderUser {
+            $user ??= $this->createUser($socialUser);
             event(new Verified($user));
 
-            return $this->createSocialProviderUser($user, $socialiteUser, $driver);
+            return $this->createSocialProviderUser($user, $socialUser, $driver);
         });
     }
 
-    private function createUser(SocialUser $socialiteUser): User
+    private function createUser(SocialUser $socialUser): User
     {
         return User::query()->create([
-            'name' => $socialiteUser->getName(),
-            'email' => $socialiteUser->getEmail(),
+            'name' => $socialUser->getName(),
+            'email' => $socialUser->getEmail(),
             'email_verified_at' => now(),
         ]);
     }
 
-    private function createSocialProviderUser(User $user, SocialUser $socialiteUser, string $driver): SocialProviderUser
+    private function createSocialProviderUser(User $user, SocialUser $socialUser, string $driver): SocialProviderUser
     {
         return $user->socialProviders()->create([
             'provider_slug' => $driver,
-            'provider_user_id' => $socialiteUser->getId(),
-            'nickname' => $socialiteUser->getNickname(),
-            'name' => $socialiteUser->getName(),
-            'email' => $socialiteUser->getEmail(),
-            'avatar' => $socialiteUser->getAvatar(),
-            'provider_data' => $socialiteUser instanceof SocialiteUser
-                ? json_encode($socialiteUser->user, JSON_THROW_ON_ERROR)
+            'provider_user_id' => $socialUser->getId(),
+            'nickname' => $socialUser->getNickname(),
+            'name' => $socialUser->getName(),
+            'email' => $socialUser->getEmail(),
+            'avatar' => $socialUser->getAvatar(),
+            'provider_data' => $socialUser instanceof SocialiteUser
+                ? json_encode($socialUser->user, JSON_THROW_ON_ERROR)
                 : null,
-            'token' => $socialiteUser instanceof SocialiteUser
-                ? $socialiteUser->token
+            'token' => $socialUser instanceof SocialiteUser
+                ? $socialUser->token
                 : '',
-            'refresh_token' => $socialiteUser instanceof SocialiteUser
-                ? $socialiteUser->refreshToken
+            'refresh_token' => $socialUser instanceof SocialiteUser
+                ? $socialUser->refreshToken
                 : null,
-            'token_expires_at' => $socialiteUser instanceof SocialiteUser && $socialiteUser->expiresIn !== null
-                ? now()->addSeconds($socialiteUser->expiresIn)
+            'token_expires_at' => $socialUser instanceof SocialiteUser && $socialUser->expiresIn !== null
+                ? now()->addSeconds($socialUser->expiresIn)
                 : null,
         ]);
     }

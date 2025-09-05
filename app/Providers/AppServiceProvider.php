@@ -18,9 +18,10 @@ final class AppServiceProvider extends ServiceProvider
     /**
      * Register any application services.
      */
+    #[\Override]
     public function register(): void
     {
-        $this->app->singleton(GuzzleSender::class, fn () => new GuzzleSender);
+        $this->app->singleton(GuzzleSender::class, fn (): GuzzleSender => new GuzzleSender);
     }
 
     /**

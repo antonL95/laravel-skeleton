@@ -13,24 +13,24 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('social_provider_user', function (Blueprint $table): void {
-            $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->string('provider_slug');
+        Schema::create('social_provider_user', function (Blueprint $blueprint): void {
+            $blueprint->id();
+            $blueprint->foreignId('user_id')->constrained()->onDelete('cascade');
+            $blueprint->string('provider_slug');
 
-            $table->string('provider_user_id');
-            $table->string('nickname')->nullable();
-            $table->string('name')->nullable();
-            $table->string('email')->nullable();
-            $table->string('avatar')->nullable();
-            $table->text('provider_data')->nullable();
+            $blueprint->string('provider_user_id');
+            $blueprint->string('nickname')->nullable();
+            $blueprint->string('name')->nullable();
+            $blueprint->string('email')->nullable();
+            $blueprint->string('avatar')->nullable();
+            $blueprint->text('provider_data')->nullable();
 
-            $table->string('token', 1024);
-            $table->string('refresh_token')->nullable();
-            $table->timestamp('token_expires_at')->nullable();
-            $table->timestamps();
+            $blueprint->string('token', 1024);
+            $blueprint->string('refresh_token')->nullable();
+            $blueprint->timestamp('token_expires_at')->nullable();
+            $blueprint->timestamps();
 
-            $table->unique(['user_id', 'provider_slug']);
+            $blueprint->unique(['user_id', 'provider_slug']);
         });
     }
 

@@ -10,21 +10,21 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('stripe_products', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->string('stripe_id')->unique();
-            $table->string('name');
-            $table->text('description')->nullable();
-            $table->string('price_id')->nullable();
-            $table->unsignedBigInteger('price')->nullable();
-            $table->string('currency')->nullable();
-            $table->json('features')->nullable();
-            $table->boolean('recurring')->default(false);
-            $table->boolean('active')->default(true);
-            $table->json('metadata');
-            $table->timestamps();
+        Schema::create('stripe_products', function (Blueprint $blueprint): void {
+            $blueprint->uuid('id')->primary();
+            $blueprint->string('stripe_id')->unique();
+            $blueprint->string('name');
+            $blueprint->text('description')->nullable();
+            $blueprint->string('price_id')->nullable();
+            $blueprint->unsignedBigInteger('price')->nullable();
+            $blueprint->string('currency')->nullable();
+            $blueprint->json('features')->nullable();
+            $blueprint->boolean('recurring')->default(false);
+            $blueprint->boolean('active')->default(true);
+            $blueprint->json('metadata');
+            $blueprint->timestamps();
 
-            $table->index(['stripe_id', 'price_id', 'price', 'currency']);
+            $blueprint->index(['stripe_id', 'price_id', 'price', 'currency']);
         });
     }
 };

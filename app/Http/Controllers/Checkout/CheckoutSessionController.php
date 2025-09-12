@@ -2,24 +2,19 @@
 
 declare(strict_types=1);
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Checkout;
 
 use App\Actions\FetchStripeProducts;
-use App\Data\FlashData;
 use App\Enums\CheckoutStatus;
-use App\Enums\FlashMessageType;
-use App\Events\FlashMessageEvent;
 use App\Models\User;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
-use Laravel\Cashier\Cashier;
 use Symfony\Component\HttpFoundation\Response;
 
 final readonly class CheckoutSessionController
 {
-    public function show(): InertiaResponse
+    public function index(): InertiaResponse
     {
         return Inertia::render('checkout/index', [
             'pricing' => app(FetchStripeProducts::class)->handle(),
@@ -48,42 +43,5 @@ final readonly class CheckoutSessionController
                     'cancel_url' => route('checkout-cancel').'?session_id={CHECKOUT_SESSION_ID}',
                 ])->redirect(),
         );
-    }
-
-    public function success(Request $request): RedirectResponse
-    {
-        /** @var User $user */
-        $user = $request->user();
-
-        /** @var string $stringable */
-        $stringable = $request->string('session_id', '');
-
-        if ($stringable === '') {
-            return redirect(route('checkout.show'));
-        }
-
-        $session = Cashier::stripe()->checkout->sessions->retrieve($stringable);
-
-        if ($session->payment_status !== CheckoutStatus::PAID->value) {
-            return redirect(route('checkout.show'));
-        }
-
-        broadcast(
-            new FlashMessageEvent(
-                $user,
-                new FlashData(
-                    FlashMessageType::SUCCESS,
-                    __('messages.toast.subscription_success.title'),
-                    __('messages.toast.subscription_success.description'),
-                ),
-            ),
-        );
-
-        return redirect(route('dashboard'));
-    }
-
-    public function cancel(): RedirectResponse
-    {
-        return redirect(route('checkout.show'));
     }
 }

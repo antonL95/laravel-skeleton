@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
-use App\Http\Controllers\CheckoutSessionController;
+use App\Http\Controllers\Checkout\CheckoutCanceledController;
+use App\Http\Controllers\Checkout\CheckoutSessionController;
+use App\Http\Controllers\Checkout\CheckoutSuccessfulController;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -19,8 +21,7 @@ Route::middleware(['auth'])->group(function (): void {
         },
     )->name('billing.portal');
 
-    Route::get('/checkout', [CheckoutSessionController::class, 'show'])->name('checkout.show');
-    Route::get('/checkout/store', [CheckoutSessionController::class, 'store'])->name('checkout.store');
-    Route::get('/checkout/success', [CheckoutSessionController::class, 'success'])->name('checkout.success');
-    Route::get('/checkout/cancel', [CheckoutSessionController::class, 'cancel'])->name('checkout.cancel');
+    Route::resource('checkout', CheckoutSessionController::class)->only(['index', 'store']);
+    Route::get('/checkout/success', CheckoutSuccessfulController::class)->name('checkout.success');
+    Route::get('/checkout/cancel', CheckoutCanceledController::class)->name('checkout.cancel');
 });

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Filament\Admin\Resources\StripeProductResource\Pages;
+namespace App\Filament\Admin\Resources\StripeProducts\Pages;
 
-use App\Filament\Admin\Resources\StripeProductResource;
+use App\Filament\Admin\Resources\StripeProducts\StripeProductResource;
 use Filament\Actions\DeleteAction;
 use Filament\Resources\Pages\EditRecord;
 

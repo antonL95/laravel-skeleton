@@ -1,8 +1,16 @@
 version: '3.8'
 
-x-app-image: &app-image
-  image: 'docker.antonloginov.com/{image-name}/{image-name}:latest'
-  pull_policy: always
+x-web-image: &web-image
+  build:
+    context: .
+    dockerfile: Dockerfile
+    target: web
+
+x-worker-image: &worker-image
+  build:
+    context: .
+    dockerfile: Dockerfile
+    target: worker
 
 x-app-volumes: &app-volumes
   volumes:
@@ -70,8 +78,6 @@ x-app-environment: &app-environment
   CASHIER_CURRENCY: '${CASHIER_CURRENCY}'
   CASHIER_CURRENCY_LOCALE: '${CASHIER_CURRENCY_LOCALE}'
   CASHIER_LOGGER: '${CASHIER_LOGGER}'
-  CREDITS_PRICE_ID: '${CREDITS_PRICE_ID}'
-  SENTRY_LARAVEL_DSN: '${SENTRY_LARAVEL_DSN}'
   SETTINGS_CACHE_ENABLED: '${SETTINGS_CACHE_ENABLED}'
   OPENAI_API_KEY: '${OPENAI_API_KEY}'
   OPENAI_ORGANIZATION: '${OPENAI_ORGANIZATION}'
@@ -86,16 +92,16 @@ x-app-environment: &app-environment
   VITE_REVERB_SCHEME: '${REVERB_SCHEME}'
   NIGHTWATCH_TOKEN: '${NIGHTWATCH_TOKEN}'
   NIGHTWATCH_REQUEST_SAMPLE_RATE: '${NIGHTWATCH_REQUEST_SAMPLE_RATE}'
-  NIGHTWATCH_PORT: '${NIGHTWATCH_PORT:-2408}'
+  NIGHTWATCH_PORT: '${NIGHTWATCH_PORT:-2407}'
 
 services:
   app:
-    <<: [*app-image, *app-volumes]
+    <<: [*web-image, *app-volumes]
     environment:
       <<: *app-environment
       PHP_FPM_POOL_NAME: "app"
   worker:
-    <<: [*app-image, *app-volumes]
+    <<: [*worker-image, *app-volumes]
     command: [ "php", "/var/www/html/artisan", "queue:work", "--tries=3" ]
     environment:
       <<: *app-environment
@@ -107,7 +113,7 @@ services:
       start_period: 10s
     stop_signal: SIGTERM
   redis-worker:
-    <<: [*app-image, *app-volumes]
+    <<: [*worker-image, *app-volumes]
     command: [ "php", "/var/www/html/artisan", "queue:work", "redis", "--tries=3" ]
     environment:
       <<: *app-environment
@@ -119,7 +125,7 @@ services:
       start_period: 10s
     stop_signal: SIGTERM
   scheduler:
-    <<: [*app-image, *app-volumes]
+    <<: [*worker-image, *app-volumes]
     command: [ "php", "/var/www/html/artisan", "schedule:work" ]
     environment:
       <<: *app-environment
@@ -129,10 +135,10 @@ services:
       test: [ "CMD", "healthcheck-schedule" ]
       start_period: 10s
   nightwatch:
-    <<: [*app-image, *app-volumes]
-    command: [ "php", "/var/www/html/artisan", "nightwatch:agent", "--listen-on=0.0.0.0:${NIGHTWATCH_PORT:-2408}" ]
+    <<: [*worker-image, *app-volumes]
+    command: [ "php", "/var/www/html/artisan", "nightwatch:agent", "--listen-on=0.0.0.0:${NIGHTWATCH_PORT:-2407}" ]
     ports:
-      - "${NIGHTWATCH_PORT:-2408}:${NIGHTWATCH_PORT:-2408}"
+      - "${NIGHTWATCH_PORT:-2407}:${NIGHTWATCH_PORT:-2407}"
     environment:
       <<: *app-environment
       PHP_FPM_POOL_NAME: "app_nightwatch_agent"

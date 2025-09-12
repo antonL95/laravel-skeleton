@@ -21,7 +21,6 @@ return RectorConfig::configure()
         deadCode: true,
         codeQuality: true,
         typeDeclarations: true,
-        privatization: true,
         naming: true,
         instanceOf: true,
         earlyReturn: true,
@@ -34,13 +33,11 @@ return RectorConfig::configure()
         LaravelSetList::LARAVEL_IF_HELPERS,
         LaravelSetList::LARAVEL_ELOQUENT_MAGIC_METHOD_TO_QUERY_BUILDER,
         LaravelSetList::LARAVEL_COLLECTION,
+        LaravelSetList::LARAVEL_ARRAY_STR_FUNCTION_TO_STATIC_CALL,
     ])
     ->withRules([
         EloquentWhereRelationTypeHintingParameterRector::class,
     ])
-    ->withImportNames(
-        importShortClasses: false,
-    )
     ->withPhpSets(php84: true)
     ->withImportNames(
         importShortClasses: false,

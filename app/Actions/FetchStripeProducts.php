@@ -46,7 +46,7 @@ final readonly class FetchStripeProducts
             );
         }
 
-        usort($result, fn (StripeProductData $a, StripeProductData $b): int => $a->name <=> $b->name);
+        usort($result, static fn (StripeProductData $a, StripeProductData $b): int => $a->name <=> $b->name);
 
         Cache::forever('stripe-products', $result);
 

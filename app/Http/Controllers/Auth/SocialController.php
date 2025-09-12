@@ -20,7 +20,6 @@ use Laravel\Socialite\Contracts\User as SocialUser;
 use Laravel\Socialite\Facades\Socialite;
 use Laravel\Socialite\Two\User as SocialiteUser;
 use RuntimeException;
-use Sentry\Laravel\Integration;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 
 final readonly class SocialController
@@ -50,7 +49,7 @@ final readonly class SocialController
 
             return redirect()->route('dashboard');
         } catch (Exception $e) {
-            Integration::captureUnhandledException($e);
+            Log::error($e->getMessage(), $e->getTrace());
 
             return redirect()->route('login')->with('error', 'An error occurred during authentication. Please try again.');
         }

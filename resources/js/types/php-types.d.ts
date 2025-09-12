@@ -26,6 +26,7 @@ emailVerifiedAt: string | null;
 };
 }
 declare namespace App.Enums {
-export type FlashMessageAction = 'delete' | 'update' | 'create' | 'renew';
+export type CheckoutStatus = 'paid' | 'unpaid' | 'no_payment_required';
+export type FlashMessageAction = 'delete' | 'update' | 'create';
 export type FlashMessageType = 'success' | 'danger';
 }

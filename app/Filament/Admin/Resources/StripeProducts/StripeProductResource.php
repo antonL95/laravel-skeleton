@@ -7,7 +7,9 @@ namespace App\Filament\Admin\Resources\StripeProducts;
 use App\Filament\Admin\Resources\StripeProducts\Pages\CreateStripeProduct;
 use App\Filament\Admin\Resources\StripeProducts\Pages\EditStripeProduct;
 use App\Filament\Admin\Resources\StripeProducts\Pages\ListStripeProducts;
+use App\Filament\Admin\Resources\StripeProducts\Pages\ViewStripeProduct;
 use App\Filament\Admin\Resources\StripeProducts\Schemas\StripeProductForm;
+use App\Filament\Admin\Resources\StripeProducts\Schemas\StripeProductInfolist;
 use App\Filament\Admin\Resources\StripeProducts\Tables\StripeProductsTable;
 use App\Models\StripeProduct;
 use BackedEnum;
@@ -37,11 +39,9 @@ final class StripeProductResource extends Resource
     }
 
     #[\Override]
-    public static function getRelations(): array
+    public static function infolist(Schema $schema): Schema
     {
-        return [
-            //
-        ];
+        return StripeProductInfolist::configure($schema);
     }
 
     public static function getPages(): array
@@ -50,6 +50,7 @@ final class StripeProductResource extends Resource
             'index' => ListStripeProducts::route('/'),
             'create' => CreateStripeProduct::route('/create'),
             'edit' => EditStripeProduct::route('/{record}/edit'),
+            'view' => ViewStripeProduct::route('/{record}'),
         ];
     }
 }

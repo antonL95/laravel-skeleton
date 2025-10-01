@@ -1,4 +1,4 @@
-import { dashboard, login, register } from '@/routes';
+import { dashboard, login, register } from '@/wayfinder/routes';
 import { type SharedData } from '@/types';
 import { Head, Link, usePage } from '@inertiajs/react';
 
@@ -114,13 +114,13 @@ export default function Welcome() {
                             </ul>
                             <ul className="flex gap-3 text-sm leading-normal">
                                 <li>
-                                    <a
-                                        href="https://cloud.laravel.com"
+                                    <Link
+                                        href="/123123123"
                                         target="_blank"
                                         className="inline-block rounded-sm border border-black bg-[#1b1b18] px-5 py-1.5 text-sm leading-normal text-white hover:border-black hover:bg-black dark:border-[#eeeeec] dark:bg-[#eeeeec] dark:text-[#1C1C1A] dark:hover:border-white dark:hover:bg-white"
                                     >
                                         Deploy now
-                                    </a>
+                                    </Link>
                                 </li>
                             </ul>
                         </div>

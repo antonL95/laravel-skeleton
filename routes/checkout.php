@@ -21,7 +21,8 @@ Route::middleware(['auth'])->group(function (): void {
         },
     )->name('billing.portal');
 
-    Route::resource('checkout', CheckoutSessionController::class)->only(['index', 'store']);
+    Route::get('/checkout', [CheckoutSessionController::class,'index'])->name('checkout.index');
+    Route::get('/checkout-store/{price_id}', [CheckoutSessionController::class,'store'])->name('checkout.store');
     Route::get('/checkout/success', CheckoutSuccessfulController::class)->name('checkout.success');
     Route::get('/checkout/cancel', CheckoutCanceledController::class)->name('checkout.cancel');
 });

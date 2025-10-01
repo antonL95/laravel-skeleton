@@ -83,11 +83,7 @@ export default function PricingSection({ pricing }: { pricing?: StripeProductDat
                                 ) : (
                                     <Link
                                         href={
-                                            store({
-                                                query: {
-                                                    price_id: tier.priceId,
-                                                },
-                                            }).url
+                                            store(tier.priceId).url
                                         }
                                     >
                                         {tier.cta}

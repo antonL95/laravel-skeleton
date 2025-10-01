@@ -21,7 +21,7 @@ export default function ({ children }: AppLayoutProps) {
                         <AppLogoIcon className="h-10 fill-current text-white" />
                     </Link>
                     <div>
-                        {auth.user ? (
+                        {auth?.user ? (
                             <Link
                                 prefetch
                                 href={dashboard().url}

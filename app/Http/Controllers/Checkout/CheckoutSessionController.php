@@ -21,19 +21,22 @@ final readonly class CheckoutSessionController
         ]);
     }
 
-    public function store(Request $request): Response
+    public function store(Request $request, string $price_id): Response
     {
         /** @var User $user */
         $user = $request->user();
-        $price = $request->string('price_id')->value();
+
+        if ($user->subscribed()) {
+            return Inertia::location(to_route('billing.portal'));
+        }
 
         $user->checkouts()->create([
-            'price_id' => $price,
+            'price_id' => $price_id,
             'status' => CheckoutStatus::UNPAID->value,
         ]);
 
         return Inertia::location(
-            $user->newSubscription('default', $price)
+            $user->newSubscription('default', $price_id)
                 ->skipTrial()
                 ->trialDays(0)
                 ->allowPromotionCodes()

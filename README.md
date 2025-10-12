@@ -1,6 +1,6 @@
 # Laravel React Starter Kit
 
-A modern, full-stack Laravel application with React frontend, featuring comprehensive admin panel, payment processing, real-time features, and production-ready tooling.
+A modern, full-stack Laravel application with React frontend, featuring comprehensive admin panel, payment processing, social authentication, real-time features, and production-ready tooling.
 
 ## Overview
 
@@ -9,6 +9,7 @@ This is a production-ready Laravel application skeleton that combines:
 - **Frontend**: React 19 with TypeScript and Inertia.js
 - **Admin Panel**: Filament 4 with comprehensive CRUD interfaces
 - **Payments**: Laravel Cashier with Stripe integration
+- **Social Authentication**: Laravel Socialite
 - **Real-time**: Laravel Reverb for WebSocket communication
 - **Monitoring**: Laravel Nightwatch for application monitoring
 - **Styling**: Tailwind CSS 4 with modern component libraries
@@ -29,13 +30,14 @@ This is a production-ready Laravel application skeleton that combines:
 - **Stripe Account**: For payment processing
 - **Google OAuth**: For social authentication
 - **Sentry**: For error tracking
+- **Laravel nightwatch**: For observability
 
 ## Setup & Installation
 
 ### 1. Clone and Install Dependencies
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/antonL95/laravel-skeleton
 cd laravel-skeleton
 composer install
 npm install
@@ -76,80 +78,26 @@ npm run dev
 ### Available Scripts (Composer)
 
 ```bash
-# Start complete development environment
-composer run dev
-
-# Start with SSR support
-composer run dev:ssr
-
 # Run all tests and linting
-composer run test
+composer test
 
 # Run individual test suites
-composer run test:unit
-composer run test:arch
-composer run test:types
+composer test:unit
+composer test:arch
+composer test:types
 
 # Code formatting and refactoring
-composer run lint
-composer run refactor
-```
-
-### Available Scripts (npm)
-
-```bash
-# Development server
-npm run dev
-
-# Build for production
-npm run build
-
-# Build with SSR support
-npm run build:ssr
-
-# Code formatting
-npm run format
-npm run format:check
-
-# Linting
-npm run lint
-
-# Type checking
-npm run types
+composer lint
 ```
 
 ### Laravel Artisan Commands
 
 ```bash
-# Start development server
-php artisan serve
-
-# Run queue worker
-php artisan queue:work
-
-# Run scheduler
-php artisan schedule:work
-
-# Start Nightwatch monitoring
-php artisan nightwatch:agent
-
 # Transform TypeScript definitions
 php artisan typescript:transform
 ```
 
 ## Environment Variables
-
-### Core Application
-- `APP_NAME`: Application name
-- `APP_ENV`: Environment (local, production)
-- `APP_KEY`: Application encryption key
-- `APP_URL`: Application URL
-- `APP_DEBUG`: Debug mode (true/false)
-
-### Database
-- `DB_CONNECTION`: Database driver (pgsql, mysql, sqlite)
-- `DB_HOST`, `DB_PORT`, `DB_DATABASE`: Database connection details
-- `DB_USERNAME`, `DB_PASSWORD`: Database credentials
 
 ### Stripe Integration
 - `STRIPE_KEY`: Stripe publishable key
@@ -179,8 +127,6 @@ php artisan typescript:transform
 
 ### Optional Services
 - `SENTRY_LARAVEL_DSN`: Error tracking
-- `REDIS_HOST`, `REDIS_PORT`: Redis configuration
-- `MAIL_MAILER`, `MAIL_HOST`: Email configuration
 
 ## Testing
 
@@ -192,28 +138,8 @@ The project uses **Pest 4** for testing with comprehensive coverage:
 - **Browser Tests**: `tests/Browser/` - End-to-end browser testing
 - **Architecture Tests**: Enforces coding standards and architectural rules
 
-### Running Tests
-
-```bash
-# All tests
-php artisan test
-
-# Specific test suite
-php artisan test --testsuite=Feature
-
-# With coverage
-composer run test:unit-cov
-
-# Filter specific tests
-php artisan test --filter=AuthenticationTest
-
-# Type coverage
-composer run test:type-cov
-```
-
 ### Test Configuration
 - Tests use SQLite in-memory database
-- Isolated test environment with proper mocking
 - Browser tests available for UI testing
 - Architecture tests ensure code quality
 
@@ -241,26 +167,12 @@ composer run test:type-cov
 │   ├── Unit/              # Unit tests
 │   ├── Feature/           # Feature tests
 │   └── Browser/           # Browser tests
-├── docker-compose.yaml    # Docker development setup
+├── docker-compose.yaml    # Docker production setup
 ├── Dockerfile            # Container configuration
 └── ...
 ```
 
 ## Docker Support
-
-The project includes comprehensive Docker support:
-
-```bash
-# Start all services
-docker-compose up -d
-
-# Available services:
-# - app: Main web application
-# - worker: Queue worker
-# - redis-worker: Redis queue worker
-# - scheduler: Task scheduler
-# - nightwatch: Monitoring agent
-```
 
 Services included:
 - **Web application** with PHP-FPM
@@ -302,15 +214,8 @@ Services included:
 ### Code Standards
 - Follow PSR-12 for PHP code
 - Use Prettier for JavaScript/TypeScript formatting
-- Run `composer run lint` before committing
-- Ensure all tests pass with `composer run test`
-
-### Development Workflow
-1. Run `composer run dev` for complete development environment
-2. Make your changes
-3. Run tests: `composer run test`
-4. Format code: `composer run lint`
-5. Submit pull request
+- Run `composer lint` before committing
+- Ensure all tests pass with `composer test`
 
 ## License
 

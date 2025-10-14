@@ -81,13 +81,7 @@ export default function PricingSection({ pricing }: { pricing?: StripeProductDat
                                         {tier.cta}
                                     </Link>
                                 ) : (
-                                    <Link
-                                        href={
-                                            store(tier.priceId).url
-                                        }
-                                    >
-                                        {tier.cta}
-                                    </Link>
+                                    <Link href={store(tier.priceId).url}>{tier.cta}</Link>
                                 )}
                             </Button>
                             <ul role="list" className="mt-8 space-y-3 text-sm/6 text-foreground">

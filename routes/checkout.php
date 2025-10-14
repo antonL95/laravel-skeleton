@@ -17,12 +17,12 @@ Route::middleware(['auth'])->group(function (): void {
             $user = $request->user();
 
             return $user?->redirectToBillingPortal(options: ['locale' => app()->getLocale()])
-                ?? redirect()->route('login');
+                ?? to_route('login');
         },
     )->name('billing.portal');
 
-    Route::get('/checkout', [CheckoutSessionController::class,'index'])->name('checkout.index');
-    Route::get('/checkout-store/{price_id}', [CheckoutSessionController::class,'store'])->name('checkout.store');
+    Route::get('/checkout', [CheckoutSessionController::class, 'index'])->name('checkout.index');
+    Route::get('/checkout-store/{price_id}', [CheckoutSessionController::class, 'store'])->name('checkout.store');
     Route::get('/checkout/success', CheckoutSuccessfulController::class)->name('checkout.success');
     Route::get('/checkout/cancel', CheckoutCanceledController::class)->name('checkout.cancel');
 });

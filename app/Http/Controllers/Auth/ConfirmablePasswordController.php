@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Auth;
 
 use App\Models\User;
-use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Date;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -31,7 +31,7 @@ final readonly class ConfirmablePasswordController
             'password' => __('auth.password'),
         ]));
 
-        $request->session()->put('auth.password_confirmed_at', Carbon::now()->getTimestamp());
+        $request->session()->put('auth.password_confirmed_at', Date::now()->getTimestamp());
 
         return redirect()->intended(route('dashboard', absolute: false));
     }

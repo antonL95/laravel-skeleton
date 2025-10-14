@@ -43,15 +43,15 @@ final readonly class SocialController
                 return $providerUser;
             }
 
-            throw_unless($providerUser->user instanceof Authenticatable, new RuntimeException);
+            throw_unless($providerUser->user instanceof Authenticatable, RuntimeException::class);
 
             Auth::login($providerUser->user);
 
-            return redirect()->route('dashboard');
+            return to_route('dashboard');
         } catch (Exception $e) {
             Log::error($e->getMessage(), $e->getTrace());
 
-            return redirect()->route('login')->with('error', 'An error occurred during authentication. Please try again.');
+            return to_route('login')->with('error', 'An error occurred during authentication. Please try again.');
         }
     }
 
@@ -81,7 +81,7 @@ final readonly class SocialController
             if ($existingProvider) {
                 Log::error('This email is already associated with another provider. Please login using that provider.');
 
-                return redirect()->route('login')->with(
+                return to_route('login')->with(
                     'error',
                     'This email is already associated with another provider. Please login using that provider.',
                 );

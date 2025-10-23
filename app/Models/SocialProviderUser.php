@@ -41,7 +41,7 @@ final class SocialProviderUser extends Model
     /**
      * @return string[]
      */
-    public function casts(): array
+    protected function casts(): array
     {
         return [
             'token_expires_at' => 'datetime',

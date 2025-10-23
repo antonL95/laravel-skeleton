@@ -12,7 +12,9 @@ use Illuminate\Database\Eloquent\Model;
 final class StripeProduct extends Model
 {
     /** @use HasFactory<StripeProductFactory> */
-    use HasFactory, HasUuids;
+    use HasFactory;
+
+    use HasUuids;
 
     protected $fillable = [
         'stripe_id',

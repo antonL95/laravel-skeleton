@@ -13,7 +13,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 final class Checkout extends Model
 {
     /** @use HasFactory<CheckoutFactory> */
-    use HasFactory, HasUuids;
+    use HasFactory;
+
+    use HasUuids;
 
     protected $fillable = [
         'user_id',

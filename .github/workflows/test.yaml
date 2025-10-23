@@ -3,7 +3,7 @@ name: Test application
 on:
   push:
     branches:
-      - 'develop'
+      - 'main'
 
 jobs:
   ci:

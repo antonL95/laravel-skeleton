@@ -17,7 +17,7 @@ final class SyncStripeProducts extends Action
             ->label('Sync from Stripe')
             ->icon('heroicon-o-arrow-path')
             ->action(function (): void {
-                app(SyncStripeProductsAction::class)->handle();
+                resolve(SyncStripeProductsAction::class)->handle();
 
                 Notification::make()
                     ->title('Stripe products synced successfully!')

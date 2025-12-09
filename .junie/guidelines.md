@@ -1,4 +1,216 @@
 <laravel-boost-guidelines>
+=== .ai/controllers rules ===
+
+<controllers-guidelines>
+Controllers should only be either RESTful resource controllers (following Laravel's conventional actions and route names) or single-action invokable controllers when the behavior does not strictly fit RESTful resource operations.
+</controllers-guidelines>
+
+
+=== .ai/localization rules ===
+
+<localization-guidelines>
+Instead of hard coding strings in the front-end always use use-translation hook and localize them in the backend. use the dot notation to access the string. eg. `const t = useTranslation();` `t('auth.login');`
+</localization-guidelines>
+
+
+=== .ai/front-end rules ===
+
+<front-end-guidelines>
+Whenever you are creating a new page on the front-end and it has a crud functionality.
+You should create only index.tsx page and in the partials folder for the feature you should create a form that is both for edit and create functionality.
+The form should be shown as a dialog.
+Avoid creating interfaces in the component. Use laravel-data for creating a type definition on the backend and use it in the component. using `php artisan typescript:transform` command.
+
+    <code-example language="tsx" description="Example of a index page">
+        import TableAction from '@/components/table-action';
+        import { Button } from '@/components/ui/button';
+        import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+        import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
+        import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+        import AppLayout from '@/layouts/app-layout';
+        import StockMarketForm from '@/pages/stock-market/partials/stock-market-form';
+        import { destroy } from '@/wayfinder/routes/user-stock-market';
+        import { Head, router } from '@inertiajs/react';
+        import { TrendingUp } from 'lucide-react';
+        import { useState } from 'react';
+        import UserStockMarketData = App.Data.App.StockMarket.UserStockMarketData;
+
+        export default function Index({ columns, rows }: { columns: string[]; rows?: UserStockMarketData[] }) {
+        const [open, setOpen] = useState(false);
+        const [openEdit, setOpenEdit] = useState(false);
+        const [selectedRow, setSelectedRow] = useState<UserStockMarketData | null>(null);
+
+            const handleDelete = (row: UserStockMarketData) => {
+            router.delete(destroy(row.id).url);
+            };
+            const handleEditClick = (row: UserStockMarketData) => {
+            setSelectedRow(row);
+            setOpenEdit(true);
+            };
+
+            return (
+            <AppLayout>
+                <Head title="Stock market portfolio" />
+
+                <div className={`flex h-full max-w-full flex-1 flex-col gap-4 rounded-xl p-4`}>
+                    {!rows || rows.length === 0 ? (
+                    <Empty>
+                        <EmptyHeader>
+                            <EmptyMedia variant="icon">
+                                <TrendingUp />
+                            </EmptyMedia>
+                            <EmptyTitle>No stock holdings yet</EmptyTitle>
+                            <EmptyDescription>
+                                Track your stock portfolio by adding ticker symbols (e.g., AAPL, TSLA) along with the number of shares you own. We'll
+                                automatically fetch current prices and calculate your holdings.
+                            </EmptyDescription>
+                        </EmptyHeader>
+                        <EmptyContent>
+                            <Button onClick={() => setOpen(true)}>Add stock ticker</Button>
+                        </EmptyContent>
+                    </Empty>
+                    ) : (
+                    <>
+                    <div className={`flex items-center space-x-2 self-end`}>
+                        <Button onClick={() => setOpen(true)}>Add stock ticker</Button>
+                    </div>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                {columns.map((column: string) => (
+                                <TableHead key={column}>{column}</TableHead>
+                                ))}
+                                <TableHead className="relative w-0">
+                                    <span className="sr-only">Actions</span>
+                                </TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {rows?.map((row: UserStockMarketData) => (
+                            <TableRow key={row.id}>
+                                <TableCell>{row.ticker}</TableCell>
+                                <TableCell>{row.amount}</TableCell>
+                                <TableCell>{row.balance}</TableCell>
+                                <TableCell>
+                                    <TableAction row={row} destroy={() => handleDelete(row)} handleEditClick={() => handleEditClick(row)} />
+                                </TableCell>
+                            </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </>
+                )}
+                </div>
+
+                <Dialog open={open} onOpenChange={() => setOpen(false)}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Add stock ticker</DialogTitle>
+                    </DialogHeader>
+                    <StockMarketForm closeModal={() => setOpen(false)} />
+                </DialogContent>
+                </Dialog>
+                <Dialog open={openEdit} onOpenChange={() => setOpenEdit(false)}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Update stock ticker</DialogTitle>
+                    </DialogHeader>
+                    {selectedRow && <StockMarketForm stockMarket={selectedRow} closeModal={() => setOpenEdit(false)} />}
+                </DialogContent>
+                </Dialog>
+            </AppLayout>
+            );
+            }
+
+    </code-example>
+
+    <code-example language="tsx" description="Example of a form component">
+        import { Button } from '@/components/ui/button';
+        import { FormMessage } from '@/components/ui/form';
+        import { Input } from '@/components/ui/input';
+        import { Label } from '@/components/ui/label';
+        import { store, update } from '@/wayfinder/actions/App/Http/Controllers/App/UserStockMarketController';
+        import { useForm } from '@inertiajs/react';
+        import { Loader2 } from 'lucide-react';
+        import { FormEventHandler } from 'react';
+        import StockMarketData = App.Data.App.StockMarket.StockMarketData;
+        import UserStockMarketData = App.Data.App.StockMarket.UserStockMarketData;
+
+        export default function StockMarketForm({ stockMarket, closeModal }: { stockMarket?: UserStockMarketData; closeModal: () => void }) {
+        const { data, setData, errors, submit, processing, reset } = useForm<StockMarketData>({
+            ticker: stockMarket?.ticker || '',
+            amount: stockMarket?.amount || 0,
+            });
+
+            const handleSubmit: FormEventHandler = (e) => {
+            e.preventDefault();
+
+            if (stockMarket !== undefined) {
+            submit(update(stockMarket.id), {
+            onSuccess: () => {
+            setTimeout(() => {
+            reset();
+            closeModal();
+            }, 100);
+            },
+            only: ['rows', 'flash'],
+            });
+            } else {
+            submit(store(), {
+            onSuccess: () => {
+            setTimeout(() => {
+            reset();
+            closeModal();
+            }, 100);
+            },
+            only: ['rows', 'flash'],
+            });
+            }
+            };
+
+            return (
+            <form onSubmit={handleSubmit} className="mt-6 space-y-6">
+                <div className="grid gap-2">
+                    <Label htmlFor={'ticker'}>Ticker</Label>
+                    <Input
+                        id={'ticker'}
+                        name={'ticker'}
+                        value={data.ticker}
+                        onChange={(e) => {
+                    setData('ticker', e.target.value);
+                    }}
+                    autoFocus={true}
+                    />
+                    {errors.ticker !== undefined && <FormMessage>{errors.ticker}</FormMessage>}
+                </div>
+                <div className="grid gap-2">
+                    <Label htmlFor={'amount'}>Amount</Label>
+                    <Input
+                        id={'amount'}
+                        name={'amount'}
+                        value={data.amount}
+                        type={'number'}
+                        step={'0.001'}
+                        onChange={(e) => {
+                    setData('amount', Number.parseFloat(e.target.value));
+                    }}
+                    />
+                    {errors.amount !== undefined && <FormMessage>{errors.amount}</FormMessage>}
+                </div>
+
+                <div className="flex items-center gap-4">
+                    <Button type={'submit'} color={'sky'} className={'mt-5'} disabled={processing}>
+                        {processing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <></>}
+                    {stockMarket !== undefined ? 'Update' : 'Create'}
+                    </Button>
+                </div>
+            </form>
+            );
+            }
+    </code-example>
+</front-end-guidelines>
+
+
 === foundation rules ===
 
 # Laravel Boost Guidelines
@@ -8,13 +220,14 @@ The Laravel Boost guidelines are specifically curated by Laravel maintainers for
 ## Foundational Context
 This application is a Laravel application and its main Laravel ecosystems package & versions are below. You are an expert with them all. Ensure you abide by these specific packages & versions.
 
-- php - 8.4.13
+- php - 8.5.0
 - filament/filament (FILAMENT) - v4
 - inertiajs/inertia-laravel (INERTIA) - v2
 - laravel/cashier (CASHIER) - v15
 - laravel/fortify (FORTIFY) - v1
 - laravel/framework (LARAVEL) - v12
 - laravel/nightwatch (NIGHTWATCH) - v1
+- laravel/octane (OCTANE) - v2
 - laravel/prompts (PROMPTS) - v0
 - laravel/reverb (REVERB) - v1
 - laravel/socialite (SOCIALITE) - v5
@@ -34,7 +247,6 @@ This application is a Laravel application and its main Laravel ecosystems packag
 - eslint (ESLINT) - v9
 - laravel-echo (ECHO) - v2
 - prettier (PRETTIER) - v3
-
 
 ## Conventions
 - You must follow all existing code conventions used in this application. When creating or editing a file, check sibling files for the correct structure, approach, naming.
@@ -135,108 +347,12 @@ protected function isAccessible(User $user, ?string $path = null): bool
 - You must not run any commands to make the site available via HTTP(s). It is _always_ available through Laravel Herd.
 
 
-=== filament/core rules ===
+=== tests rules ===
 
-## Filament
-- Filament is used by this application, check how and where to follow existing application conventions.
-- Filament is a Server-Driven UI (SDUI) framework for Laravel. It allows developers to define user interfaces in PHP using structured configuration objects. It is built on top of Livewire, Alpine.js, and Tailwind CSS.
-- You can use the `search-docs` tool to get information from the official Filament documentation when needed. This is very useful for Artisan command arguments, specific code examples, testing functionality, relationship management, and ensuring you're following idiomatic practices.
-- Utilize static `make()` methods for consistent component initialization.
+## Test Enforcement
 
-### Artisan
-- You must use the Filament specific Artisan commands to create new files or components for Filament. You can find these with the `list-artisan-commands` tool, or with `php artisan` and the `--help` option.
-- Inspect the required options, always pass `--no-interaction`, and valid arguments for other options when applicable.
-
-### Filament's Core Features
-- Actions: Handle doing something within the application, often with a button or link. Actions encapsulate the UI, the interactive modal window, and the logic that should be executed when the modal window is submitted. They can be used anywhere in the UI and are commonly used to perform one-time actions like deleting a record, sending an email, or updating data in the database based on modal form input.
-- Forms: Dynamic forms rendered within other features, such as resources, action modals, table filters, and more.
-- Infolists: Read-only lists of data.
-- Notifications: Flash notifications displayed to users within the application.
-- Panels: The top-level container in Filament that can include all other features like pages, resources, forms, tables, notifications, actions, infolists, and widgets.
-- Resources: Static classes that are used to build CRUD interfaces for Eloquent models. Typically live in `app/Filament/Resources`.
-- Schemas: Represent components that define the structure and behavior of the UI, such as forms, tables, or lists.
-- Tables: Interactive tables with filtering, sorting, pagination, and more.
-- Widgets: Small component included within dashboards, often used for displaying data in charts, tables, or as a stat.
-
-### Relationships
-- Determine if you can use the `relationship()` method on form components when you need `options` for a select, checkbox, repeater, or when building a `Fieldset`:
-
-<code-snippet name="Relationship example for Form Select" lang="php">
-Forms\Components\Select::make('user_id')
-    ->label('Author')
-    ->relationship('author')
-    ->required(),
-</code-snippet>
-
-
-## Testing
-- It's important to test Filament functionality for user satisfaction.
-- Ensure that you are authenticated to access the application within the test.
-- Filament uses Livewire, so start assertions with `livewire()` or `Livewire::test()`.
-
-### Example Tests
-
-<code-snippet name="Filament Table Test" lang="php">
-    livewire(ListUsers::class)
-        ->assertCanSeeTableRecords($users)
-        ->searchTable($users->first()->name)
-        ->assertCanSeeTableRecords($users->take(1))
-        ->assertCanNotSeeTableRecords($users->skip(1))
-        ->searchTable($users->last()->email)
-        ->assertCanSeeTableRecords($users->take(-1))
-        ->assertCanNotSeeTableRecords($users->take($users->count() - 1));
-</code-snippet>
-
-<code-snippet name="Filament Create Resource Test" lang="php">
-    livewire(CreateUser::class)
-        ->fillForm([
-            'name' => 'Howdy',
-            'email' => 'howdy@example.com',
-        ])
-        ->call('create')
-        ->assertNotified()
-        ->assertRedirect();
-
-    assertDatabaseHas(User::class, [
-        'name' => 'Howdy',
-        'email' => 'howdy@example.com',
-    ]);
-</code-snippet>
-
-<code-snippet name="Testing Multiple Panels (setup())" lang="php">
-    use Filament\Facades\Filament;
-
-    Filament::setCurrentPanel('app');
-</code-snippet>
-
-<code-snippet name="Calling an Action in a Test" lang="php">
-    livewire(EditInvoice::class, [
-        'invoice' => $invoice,
-    ])->callAction('send');
-
-    expect($invoice->refresh())->isSent()->toBeTrue();
-</code-snippet>
-
-
-=== filament/v4 rules ===
-
-## Filament 4
-
-### Important Version 4 Changes
-- File visibility is now `private` by default.
-- The `deferFilters` method from Filament v3 is now the default behavior in Filament v4, so users must click a button before the filters are applied to the table. To disable this behavior, you can use the `deferFilters(false)` method.
-- The `Grid`, `Section`, and `Fieldset` layout components no longer span all columns by default.
-- The `all` pagination page method is not available for tables by default.
-- All action classes extend `Filament\Actions\Action`. No action classes exist in `Filament\Tables\Actions`.
-- The `Form` & `Infolist` layout components have been moved to `Filament\Schemas\Components`, for example `Grid`, `Section`, `Fieldset`, `Tabs`, `Wizard`, etc.
-- A new `Repeater` component for Forms has been added.
-- Icons now use the `Filament\Support\Icons\Heroicon` Enum by default. Other options are available and documented.
-
-### Organize Component Classes Structure
-- Schema components: `Schemas/Components/`
-- Table columns: `Tables/Columns/`
-- Table filters: `Tables/Filters/`
-- Actions: `Actions/`
+- Every change must be programmatically tested. Write a new test or update an existing test, then run the affected tests to make sure they pass.
+- Run the minimum number of tests needed to ensure code quality and speed. Use `php artisan test` with a specific filename or filter.
 
 
 === inertia-laravel/core rules ===
@@ -284,7 +400,7 @@ Route::get('/users', function () {
 ## Do Things the Laravel Way
 
 - Use `php artisan make:` commands to create new files (i.e. migrations, controllers, models, etc.). You can list available Artisan commands using the `list-artisan-commands` tool.
-- If you're creating a generic PHP class, use `artisan make:class`.
+- If you're creating a generic PHP class, use `php artisan make:class`.
 - Pass `--no-interaction` to all Artisan commands to ensure they work without user input. You should also pass the correct `--options` to ensure correct behavior.
 
 ### Database
@@ -319,7 +435,7 @@ Route::get('/users', function () {
 ### Testing
 - When creating models for tests, use the factories for the models. Check if the factory has custom states that can be used before manually setting up the model.
 - Faker: Use methods such as `$this->faker->word()` or `fake()->randomDigit()`. Follow existing conventions whether to use `$this->faker` or `fake()`.
-- When creating tests, make use of `php artisan make:test [options] <name>` to create a feature test, and pass `--unit` to create a unit test. Most tests should be feature tests.
+- When creating tests, make use of `php artisan make:test [options] {name}` to create a feature test, and pass `--unit` to create a unit test. Most tests should be feature tests.
 
 ### Vite Error
 - If you receive an "Illuminate\Foundation\ViteException: Unable to locate file in Vite manifest" error, you can run `npm run build` or ask the user to run `npm run dev` or `composer run dev`.
@@ -345,6 +461,60 @@ Route::get('/users', function () {
 
 ### Models
 - Casts can and likely should be set in a `casts()` method on a model rather than the `$casts` property. Follow existing conventions from other models.
+
+
+=== wayfinder/core rules ===
+
+## Laravel Wayfinder
+
+Wayfinder generates TypeScript functions and types for Laravel controllers and routes which you can import into your client side code. It provides type safety and automatic synchronization between backend routes and frontend code.
+
+### Development Guidelines
+- Always use `search-docs` to check wayfinder correct usage before implementing any features.
+- Always Prefer named imports for tree-shaking (e.g., `import { show } from '@/actions/...'`)
+- Avoid default controller imports (prevents tree-shaking)
+- Run `php artisan wayfinder:generate` after route changes if Vite plugin isn't installed
+
+### Feature Overview
+- Form Support: Use `.form()` with `--with-form` flag for HTML form attributes — `<form {...store.form()}>` → `action="/posts" method="post"`
+- HTTP Methods: Call `.get()`, `.post()`, `.patch()`, `.put()`, `.delete()` for specific methods — `show.head(1)` → `{ url: "/posts/1", method: "head" }`
+- Invokable Controllers: Import and invoke directly as functions. For example, `import StorePost from '@/actions/.../StorePostController'; StorePost()`
+- Named Routes: Import from `@/routes/` for non-controller routes. For example, `import { show } from '@/routes/post'; show(1)` for route name `post.show`
+- Parameter Binding: Detects route keys (e.g., `{post:slug}`) and accepts matching object properties — `show("my-post")` or `show({ slug: "my-post" })`
+- Query Merging: Use `mergeQuery` to merge with `window.location.search`, set values to `null` to remove — `show(1, { mergeQuery: { page: 2, sort: null } })`
+- Query Parameters: Pass `{ query: {...} }` in options to append params — `show(1, { query: { page: 1 } })` → `"/posts/1?page=1"`
+- Route Objects: Functions return `{ url, method }` shaped objects — `show(1)` → `{ url: "/posts/1", method: "get" }`
+- URL Extraction: Use `.url()` to get URL string — `show.url(1)` → `"/posts/1"`
+
+### Example Usage
+
+<code-snippet name="Wayfinder Basic Usage" lang="typescript">
+    // Import controller methods (tree-shakable)
+    import { show, store, update } from '@/actions/App/Http/Controllers/PostController'
+
+    // Get route object with URL and method...
+    show(1) // { url: "/posts/1", method: "get" }
+
+    // Get just the URL...
+    show.url(1) // "/posts/1"
+
+    // Use specific HTTP methods...
+    show.get(1) // { url: "/posts/1", method: "get" }
+    show.head(1) // { url: "/posts/1", method: "head" }
+
+    // Import named routes...
+    import { show as postShow } from '@/routes/post' // For route name 'post.show'
+    postShow(1) // { url: "/posts/1", method: "get" }
+</code-snippet>
+
+
+### Wayfinder + Inertia
+If your application uses the `<Form>` component from Inertia, you can use Wayfinder to generate form action and method automatically.
+<code-snippet name="Wayfinder Form Component (React)" lang="typescript">
+
+<Form {...store.form()}><input name="title" /></Form>
+
+</code-snippet>
 
 
 === livewire/core rules ===
@@ -441,12 +611,11 @@ document.addEventListener('livewire:init', function () {
 === pest/core rules ===
 
 ## Pest
-
 ### Testing
 - If you need to verify a feature is working, write or update a Unit / Feature test.
 
 ### Pest Tests
-- All tests must be written using Pest. Use `php artisan make:test --pest <name>`.
+- All tests must be written using Pest. Use `php artisan make:test --pest {name}`.
 - You must not remove any tests or test files from the tests directory without approval. These are not temporary or helper files - these are core to the application.
 - Tests should test all of the happy paths, failure paths, and weird paths.
 - Tests live in the `tests/Feature` and `tests/Unit` directories.
@@ -620,6 +789,13 @@ export default () => (
 
 - Always use Tailwind CSS v4 - do not use the deprecated utilities.
 - `corePlugins` is not supported in Tailwind v4.
+- In Tailwind v4, configuration is CSS-first using the `@theme` directive — no separate `tailwind.config.js` file is needed.
+<code-snippet name="Extending Theme in CSS" lang="css">
+@theme {
+  --color-brand: oklch(0.72 0.11 178);
+}
+</code-snippet>
+
 - In Tailwind v4, you import Tailwind using a regular CSS `@import` statement, not using the `@tailwind` directives used in v3:
 
 <code-snippet name="Tailwind v4 Import Tailwind Diff" lang="diff">
@@ -649,12 +825,104 @@ export default () => (
 | decoration-clone | box-decoration-clone |
 
 
-=== tests rules ===
+=== filament/filament rules ===
 
-## Test Enforcement
+## Filament
+- Filament is used by this application, check how and where to follow existing application conventions.
+- Filament is a Server-Driven UI (SDUI) framework for Laravel. It allows developers to define user interfaces in PHP using structured configuration objects. It is built on top of Livewire, Alpine.js, and Tailwind CSS.
+- You can use the `search-docs` tool to get information from the official Filament documentation when needed. This is very useful for Artisan command arguments, specific code examples, testing functionality, relationship management, and ensuring you're following idiomatic practices.
+- Utilize static `make()` methods for consistent component initialization.
 
-- Every change must be programmatically tested. Write a new test or update an existing test, then run the affected tests to make sure they pass.
-- Run the minimum number of tests needed to ensure code quality and speed. Use `php artisan test` with a specific filename or filter.
+### Artisan
+- You must use the Filament specific Artisan commands to create new files or components for Filament. You can find these with the `list-artisan-commands` tool, or with `php artisan` and the `--help` option.
+- Inspect the required options, always pass `--no-interaction`, and valid arguments for other options when applicable.
+
+### Filament's Core Features
+- Actions: Handle doing something within the application, often with a button or link. Actions encapsulate the UI, the interactive modal window, and the logic that should be executed when the modal window is submitted. They can be used anywhere in the UI and are commonly used to perform one-time actions like deleting a record, sending an email, or updating data in the database based on modal form input.
+- Forms: Dynamic forms rendered within other features, such as resources, action modals, table filters, and more.
+- Infolists: Read-only lists of data.
+- Notifications: Flash notifications displayed to users within the application.
+- Panels: The top-level container in Filament that can include all other features like pages, resources, forms, tables, notifications, actions, infolists, and widgets.
+- Resources: Static classes that are used to build CRUD interfaces for Eloquent models. Typically live in `app/Filament/Resources`.
+- Schemas: Represent components that define the structure and behavior of the UI, such as forms, tables, or lists.
+- Tables: Interactive tables with filtering, sorting, pagination, and more.
+- Widgets: Small component included within dashboards, often used for displaying data in charts, tables, or as a stat.
+
+### Relationships
+- Determine if you can use the `relationship()` method on form components when you need `options` for a select, checkbox, repeater, or when building a `Fieldset`:
+
+<code-snippet name="Relationship example for Form Select" lang="php">
+Forms\Components\Select::make('user_id')
+    ->label('Author')
+    ->relationship('author')
+    ->required(),
+</code-snippet>
+
+
+## Testing
+- It's important to test Filament functionality for user satisfaction.
+- Ensure that you are authenticated to access the application within the test.
+- Filament uses Livewire, so start assertions with `livewire()` or `Livewire::test()`.
+
+### Example Tests
+
+<code-snippet name="Filament Table Test" lang="php">
+    livewire(ListUsers::class)
+        ->assertCanSeeTableRecords($users)
+        ->searchTable($users->first()->name)
+        ->assertCanSeeTableRecords($users->take(1))
+        ->assertCanNotSeeTableRecords($users->skip(1))
+        ->searchTable($users->last()->email)
+        ->assertCanSeeTableRecords($users->take(-1))
+        ->assertCanNotSeeTableRecords($users->take($users->count() - 1));
+</code-snippet>
+
+<code-snippet name="Filament Create Resource Test" lang="php">
+    livewire(CreateUser::class)
+        ->fillForm([
+            'name' => 'Howdy',
+            'email' => 'howdy@example.com',
+        ])
+        ->call('create')
+        ->assertNotified()
+        ->assertRedirect();
+
+    assertDatabaseHas(User::class, [
+        'name' => 'Howdy',
+        'email' => 'howdy@example.com',
+    ]);
+</code-snippet>
+
+<code-snippet name="Testing Multiple Panels (setup())" lang="php">
+    use Filament\Facades\Filament;
+
+    Filament::setCurrentPanel('app');
+</code-snippet>
+
+<code-snippet name="Calling an Action in a Test" lang="php">
+    livewire(EditInvoice::class, [
+        'invoice' => $invoice,
+    ])->callAction('send');
+
+    expect($invoice->refresh())->isSent()->toBeTrue();
+</code-snippet>
+
+
+### Important Version 4 Changes
+- File visibility is now `private` by default.
+- The `deferFilters` method from Filament v3 is now the default behavior in Filament v4, so users must click a button before the filters are applied to the table. To disable this behavior, you can use the `deferFilters(false)` method.
+- The `Grid`, `Section`, and `Fieldset` layout components no longer span all columns by default.
+- The `all` pagination page method is not available for tables by default.
+- All action classes extend `Filament\Actions\Action`. No action classes exist in `Filament\Tables\Actions`.
+- The `Form` & `Infolist` layout components have been moved to `Filament\Schemas\Components`, for example `Grid`, `Section`, `Fieldset`, `Tabs`, `Wizard`, etc.
+- A new `Repeater` component for Forms has been added.
+- Icons now use the `Filament\Support\Icons\Heroicon` Enum by default. Other options are available and documented.
+
+### Organize Component Classes Structure
+- Schema components: `Schemas/Components/`
+- Table columns: `Tables/Columns/`
+- Table filters: `Tables/Filters/`
+- Actions: `Actions/`
 
 
 === laravel/fortify rules ===

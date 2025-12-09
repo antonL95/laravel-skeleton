@@ -1,6 +1,7 @@
 import Heading from '@/components/heading';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { useTranslation } from '@/hooks/use-translation';
 import { cn } from '@/lib/utils';
 import { type NavItem } from '@/types';
 import PasswordController from '@/wayfinder/actions/App/Http/Controllers/Settings/PasswordController';
@@ -12,28 +13,29 @@ import { type PropsWithChildren } from 'react';
 
 const sidebarNavItems: NavItem[] = [
     {
-        title: 'Profile',
+        title: 'settings.layout.nav.profile',
         href: edit(),
         icon: null,
     },
     {
-        title: 'Password',
+        title: 'settings.layout.nav.password',
         href: PasswordController.edit().url,
         icon: null,
     },
     {
-        title: 'Two-Factor Auth',
+        title: 'settings.layout.nav.two_factor',
         href: show(),
         icon: null,
     },
     {
-        title: 'Appearance',
+        title: 'settings.layout.nav.appearance',
         href: appearance(),
         icon: null,
     },
 ];
 
 export default function SettingsLayout({ children }: PropsWithChildren) {
+    const t = useTranslation();
     // When server-side rendering, we only render the layout on the client...
     if (typeof window === 'undefined') {
         return null;
@@ -43,7 +45,7 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
 
     return (
         <div className="px-4 py-6">
-            <Heading title="Settings" description="Manage your profile and account settings" />
+            <Heading title={t('settings.layout.heading')} description={t('settings.layout.description')} />
 
             <div className="flex flex-col lg:flex-row lg:space-x-12">
                 <aside className="w-full max-w-xl lg:w-48">
@@ -60,7 +62,7 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
                             >
                                 <Link href={item.href} prefetch>
                                     {item.icon && <item.icon className="h-4 w-4" />}
-                                    {item.title}
+                                    {t(item.title)}
                                 </Link>
                             </Button>
                         ))}

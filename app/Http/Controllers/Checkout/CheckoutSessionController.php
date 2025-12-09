@@ -17,7 +17,7 @@ final readonly class CheckoutSessionController
     public function index(): InertiaResponse
     {
         return Inertia::render('checkout/index', [
-            'pricing' => app(FetchStripeProducts::class)->handle(),
+            'pricing' => resolve(FetchStripeProducts::class)->handle(),
         ]);
     }
 

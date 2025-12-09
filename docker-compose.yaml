@@ -1,5 +1,3 @@
-version: '3.8'
-
 x-web-image: &web-image
   build:
     context: .
@@ -12,12 +10,19 @@ x-worker-image: &worker-image
     dockerfile: Dockerfile
     target: worker
 
+x-ssr-image: &ssr-image
+  build:
+    context: .
+    dockerfile: Dockerfile
+    target: ssr
+
 x-app-volumes: &app-volumes
   volumes:
     - './storage:/var/www/html/storage'
 
 x-app-environment: &app-environment
-  AUTORUN_ENABLED: '${AUTORUN_ENABLED}'
+  AUTORUN_ENABLED: true
+  OCTANE_SERVER: "frankenphp"
   APP_NAME: '${APP_NAME}'
   APP_ENV: '${APP_ENV}'
   APP_KEY: '${APP_KEY}'
@@ -93,6 +98,7 @@ x-app-environment: &app-environment
   NIGHTWATCH_TOKEN: '${NIGHTWATCH_TOKEN}'
   NIGHTWATCH_REQUEST_SAMPLE_RATE: '${NIGHTWATCH_REQUEST_SAMPLE_RATE}'
   NIGHTWATCH_PORT: '${NIGHTWATCH_PORT:-2407}'
+  VITE_INERTIA_SSR_PORT: '${VITE_INERTIA_SSR_PORT:-13715}'
 
 services:
   app:
@@ -100,6 +106,22 @@ services:
     environment:
       <<: *app-environment
       PHP_FPM_POOL_NAME: "app"
+      INERTIA_SSR_ENABLED: true
+      INERTIA_SSR_URL: "http://ssr:${VITE_INERTIA_SSR_PORT:-13715}"
+    command: ["php", "artisan", "octane:start", "--server=frankenphp", "--port=8080"]
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.[INSERT_UNIQUE_NAME_HERE].rule=Host(`[INSTER_DOMAIN]`)"
+      - "traefik.http.routers.[INSERT_UNIQUE_NAME_HERE].entrypoints=https"
+      - "traefik.http.routers.[INSERT_UNIQUE_NAME_HERE].tls=true"
+      - "traefik.http.routers.[INSERT_UNIQUE_NAME_HERE].tls.certresolver=letsencrypt"
+      - "traefik.http.services.[INSERT_UNIQUE_NAME_HERE].loadbalancer.server.port=8080"
+    healthcheck:
+      test: ["CMD", "healthcheck-octane"]
+      start_period: 10s
+    depends_on:
+      - ssr
+
   worker:
     <<: [*worker-image, *app-volumes]
     command: [ "php", "/var/www/html/artisan", "queue:work", "--tries=3" ]
@@ -112,6 +134,7 @@ services:
       test: [ "CMD", "healthcheck-queue" ]
       start_period: 10s
     stop_signal: SIGTERM
+
   redis-worker:
     <<: [*worker-image, *app-volumes]
     command: [ "php", "/var/www/html/artisan", "queue:work", "redis", "--tries=3" ]
@@ -124,6 +147,7 @@ services:
       test: [ "CMD", "healthcheck-queue" ]
       start_period: 10s
     stop_signal: SIGTERM
+
   scheduler:
     <<: [*worker-image, *app-volumes]
     command: [ "php", "/var/www/html/artisan", "schedule:work" ]
@@ -134,6 +158,7 @@ services:
     healthcheck:
       test: [ "CMD", "healthcheck-schedule" ]
       start_period: 10s
+
   nightwatch:
     <<: [*worker-image, *app-volumes]
     command: [ "php", "/var/www/html/artisan", "nightwatch:agent", "--listen-on=0.0.0.0:${NIGHTWATCH_PORT:-2407}" ]
@@ -142,4 +167,17 @@ services:
     environment:
       <<: *app-environment
       PHP_FPM_POOL_NAME: "app_nightwatch_agent"
+    stop_signal: SIGTERM
+
+  ssr:
+    <<: [*ssr-image, *app-volumes]
+    command: ["php", "/var/www/html/artisan", "inertia:start-ssr", "--runtime=bun", "-vvv"]
+    environment:
+      <<: *app-environment
+    healthcheck:
+      test: ["CMD", "php", "/var/www/html/artisan", "inertia:check-ssr"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
     stop_signal: SIGTERM

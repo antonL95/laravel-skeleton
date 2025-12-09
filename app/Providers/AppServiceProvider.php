@@ -15,18 +15,12 @@ use Saloon\Http\Senders\GuzzleSender;
 
 final class AppServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     */
     #[\Override]
     public function register(): void
     {
         $this->app->singleton(GuzzleSender::class, fn (): GuzzleSender => new GuzzleSender);
     }
 
-    /**
-     * Bootstrap any application services.
-     */
     public function boot(): void
     {
         Model::automaticallyEagerLoadRelationships();

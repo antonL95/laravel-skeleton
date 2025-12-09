@@ -27,7 +27,7 @@ export default function ({ children }: AppLayoutProps) {
                                 href={dashboard().url}
                                 className="inline-block rounded-sm border border-muted px-5 py-1.5 text-sm leading-normal text-foreground hover:border-foreground"
                             >
-                                {t('navigation.home')}
+                                {t('navigation.dashboard')}
                             </Link>
                         ) : (
                             <>

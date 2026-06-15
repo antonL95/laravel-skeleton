@@ -12,6 +12,7 @@ final class ListStripeProducts extends ListRecords
 {
     protected static string $resource = StripeProductResource::class;
 
+    #[\Override]
     protected function getHeaderActions(): array
     {
         return [

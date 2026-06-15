@@ -1,10 +1,11 @@
-import { Toaster } from '@/components/ui/sonner';
-import { SharedData } from '@/types';
 import { usePage } from '@inertiajs/react';
 import { useEcho } from '@laravel/echo-react';
 import { CheckCircle, OctagonAlert } from 'lucide-react';
 import { useEffect } from 'react';
 import { toast } from 'sonner';
+
+import { Toaster } from '@/components/ui/sonner';
+import { SharedData } from '@/types';
 import FlashData = App.Data.FlashData;
 
 export default function Toast({ flash }: { flash?: FlashData }) {

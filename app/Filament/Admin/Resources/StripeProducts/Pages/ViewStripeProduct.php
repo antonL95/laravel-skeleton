@@ -11,6 +11,7 @@ final class ViewStripeProduct extends ViewRecord
 {
     protected static string $resource = StripeProductResource::class;
 
+    #[\Override]
     protected function getHeaderActions(): array
     {
         return [

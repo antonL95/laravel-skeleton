@@ -37,6 +37,7 @@ final class StripeProduct extends Model
      *     active: 'boolean',
      * }
      */
+    #[\Override]
     protected function casts(): array
     {
         return [

@@ -1,9 +1,11 @@
-import AppLogoIcon from '@/components/app-logo-icon';
-import { useTranslation } from '@/hooks/use-translation';
-import type { SharedData } from '@/types';
-import { dashboard, home, login, register } from '@/wayfinder/routes';
 import { Link, usePage } from '@inertiajs/react';
 import { ReactNode } from 'react';
+
+import AppLogoIcon from '@/components/app-logo-icon';
+import { useTranslation } from '@/hooks/use-translation';
+import { dashboard, home, login, register } from '@/wayfinder/routes';
+
+import type { SharedData } from '@/types';
 
 interface AppLayoutProps {
     children: ReactNode;

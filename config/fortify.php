@@ -119,6 +119,7 @@ return [
     'limiters' => [
         'login' => 'login',
         'two-factor' => 'two-factor',
+        'passkeys' => 'passkeys',
     ],
 
     /*
@@ -154,6 +155,44 @@ return [
             'confirmPassword' => true,
             // 'window' => 0
         ]),
+        Features::passkeys([
+            'confirmPassword' => true,
+        ]),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Passkeys
+    |--------------------------------------------------------------------------
+    |
+    | Here you may configure the WebAuthn relying party used by Fortify's
+    | passkey feature. Fortify wraps the laravel/passkeys package and uses
+    | these values when generating and verifying passkey credentials.
+    |
+    */
+
+    'passkeys' => [
+        'relying_party_id' => parse_url((string) config('app.url'), PHP_URL_HOST),
+        'allowed_origins' => [config('app.url')],
+        'user_handle_secret' => config('app.key'),
+        'timeout' => 60000,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Fortify Route Paths
+    |--------------------------------------------------------------------------
+    |
+    | Override the URIs Fortify registers for specific routes. The passkey
+    | destroy route is bound by the passkey's UUID (not its auto-increment id)
+    | to match the App\Models\Passkey route key.
+    |
+    */
+
+    'paths' => [
+        'passkey' => [
+            'destroy' => '/user/passkeys/{passkey:uuid}',
+        ],
     ],
 
 ];

@@ -1,4 +1,3 @@
-import { logout } from '@/wayfinder/routes';
 import { Form, Head } from '@inertiajs/react';
 import { LoaderCircle } from 'lucide-react';
 
@@ -6,7 +5,8 @@ import TextLink from '@/components/text-link';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/hooks/use-translation';
 import AuthLayout from '@/layouts/auth-layout';
-import EmailVerificationNotificationController from '@/wayfinder/actions/Laravel/Fortify/Http/Controllers/EmailVerificationNotificationController';
+import EmailVerificationNotificationController from '@/wayfinder/Laravel/Fortify/Http/Controllers/EmailVerificationNotificationController';
+import { logout } from '@/wayfinder/routes';
 
 export default function VerifyEmail({ status }: { status?: string }) {
     const t = useTranslation();

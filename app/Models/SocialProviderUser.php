@@ -41,6 +41,7 @@ final class SocialProviderUser extends Model
     /**
      * @return string[]
      */
+    #[\Override]
     protected function casts(): array
     {
         return [

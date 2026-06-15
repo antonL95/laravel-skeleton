@@ -1,6 +1,3 @@
-import { type BreadcrumbItem, type SharedData } from '@/types';
-import ProfileController from '@/wayfinder/actions/App/Http/Controllers/Settings/ProfileController';
-import { send } from '@/wayfinder/routes/verification';
 import { Transition } from '@headlessui/react';
 import { Form, Head, Link, usePage } from '@inertiajs/react';
 
@@ -13,7 +10,10 @@ import { Label } from '@/components/ui/label';
 import { useTranslation } from '@/hooks/use-translation';
 import AppLayout from '@/layouts/app-layout';
 import SettingsLayout from '@/layouts/settings/layout';
+import { type BreadcrumbItem, type SharedData } from '@/types';
+import ProfileController from '@/wayfinder/App/Http/Controllers/Settings/ProfileController';
 import { edit } from '@/wayfinder/routes/profile';
+import { send } from '@/wayfinder/routes/verification';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {

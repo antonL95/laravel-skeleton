@@ -6,6 +6,7 @@ namespace App\Providers;
 
 use App\Actions\Fortify\CreateNewUser;
 use App\Actions\Fortify\ResetUserPassword;
+use App\Models\Passkey;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -14,11 +15,15 @@ use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
 use Laravel\Fortify\Fortify;
+use Laravel\Passkeys\Passkeys;
 
 final class FortifyServiceProvider extends ServiceProvider
 {
     #[\Override]
-    public function register(): void {}
+    public function register(): void
+    {
+        Passkeys::usePasskeyModel(Passkey::class);
+    }
 
     public function boot(): void
     {
@@ -72,6 +77,14 @@ final class FortifyServiceProvider extends ServiceProvider
             $throttleKey = Str::transliterate(Str::lower($request->string(Fortify::username())->value()).'|'.$request->ip());
 
             return Limit::perMinute(5)->by($throttleKey);
+        });
+
+        RateLimiter::for('passkeys', function (Request $request): Limit {
+            $identifier = $request->user()?->getAuthIdentifier();
+
+            return Limit::perMinute(10)->by(
+                is_int($identifier) || is_string($identifier) ? (string) $identifier : (string) $request->ip(),
+            );
         });
     }
 }

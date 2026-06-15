@@ -44,6 +44,7 @@ final class StripeProductResource extends Resource
         return StripeProductInfolist::configure($schema);
     }
 
+    #[\Override]
     public static function getPages(): array
     {
         return [

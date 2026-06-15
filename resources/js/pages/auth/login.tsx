@@ -1,3 +1,7 @@
+import { Form, Head } from '@inertiajs/react';
+import { usePasskeyVerify } from '@laravel/passkeys/react';
+import { Fingerprint, LoaderCircle } from 'lucide-react';
+
 import InputError from '@/components/input-error';
 import TextLink from '@/components/text-link';
 import { Button } from '@/components/ui/button';
@@ -6,11 +10,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useTranslation } from '@/hooks/use-translation';
 import AuthLayout from '@/layouts/auth-layout';
-import AuthenticatedSessionController from '@/wayfinder/actions/Laravel/Fortify/Http/Controllers/AuthenticatedSessionController';
-import { register } from '@/wayfinder/routes';
+import AuthenticatedSessionController from '@/wayfinder/Laravel/Fortify/Http/Controllers/AuthenticatedSessionController';
+import { dashboard, register } from '@/wayfinder/routes';
+import { login as passkeyLogin, loginOptions } from '@/wayfinder/routes/passkey';
 import { request } from '@/wayfinder/routes/password';
-import { Form, Head } from '@inertiajs/react';
-import { LoaderCircle } from 'lucide-react';
 
 interface LoginProps {
     status?: string;
@@ -19,6 +22,18 @@ interface LoginProps {
 
 export default function Login({ status, canResetPassword }: LoginProps) {
     const t = useTranslation();
+
+    const {
+        verify,
+        isLoading: verifying,
+        error: passkeyError,
+        isSupported: passkeysSupported,
+    } = usePasskeyVerify({
+        routes: { options: loginOptions().url, submit: passkeyLogin().url },
+        onSuccess: (response) => {
+            window.location.href = response.redirect && response.redirect !== '/' ? response.redirect : dashboard().url;
+        },
+    });
 
     return (
         <AuthLayout title={t('auth.login.title')} description={t('auth.login.description')}>
@@ -84,6 +99,19 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                     </>
                 )}
             </Form>
+
+            {passkeysSupported && (
+                <div className="flex flex-col gap-4">
+                    <div className="relative text-center text-sm text-muted-foreground after:absolute after:inset-x-0 after:top-1/2 after:-z-10 after:h-px after:bg-border">
+                        <span className="bg-background px-2">{t('auth.login.or')}</span>
+                    </div>
+                    <Button type="button" variant="outline" className="w-full" onClick={verify} disabled={verifying} data-testid="login-passkey">
+                        {verifying ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Fingerprint className="h-4 w-4" />}
+                        {t('auth.login.passkey_button')}
+                    </Button>
+                    {passkeyError && <InputError message={passkeyError} />}
+                </div>
+            )}
 
             {status && <div className="mb-4 text-center text-sm font-medium text-green-600">{status}</div>}
         </AuthLayout>

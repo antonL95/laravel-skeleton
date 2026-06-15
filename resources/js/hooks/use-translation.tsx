@@ -1,5 +1,6 @@
-import { type SharedData } from '@/types';
 import { usePage } from '@inertiajs/react';
+
+import { type SharedData } from '@/types';
 
 /**
  * A hook to access translations from the page props.

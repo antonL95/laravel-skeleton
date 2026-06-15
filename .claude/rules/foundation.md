@@ -19,6 +19,11 @@ description: Global project conventions, structure, and communication guidelines
 - Stick to existing directory structure; don't create new base folders without approval.
 - Do not change the application's dependencies without approval.
 
+## JavaScript Runtime
+
+- Bun is the JavaScript runtime and package manager. Always use Bun; never use npm, npx, yarn, or pnpm. The lockfile is `bun.lock` (there is no `package-lock.json`).
+- Install with `bun install`, add/remove with `bun add` / `bun add -d` / `bun remove`, run scripts with `bun run <script>`, run one-off binaries with `bunx <tool>`.
+
 ## Frontend Bundling
 
 - If the user doesn't see a frontend change reflected in the UI, it could mean they need to run `bun run build`, `bun run dev`, or `composer run dev`. Ask them.

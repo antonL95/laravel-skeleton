@@ -94,7 +94,7 @@
         "refactor": "rector",
         "test:refactor": "rector --dry-run",
         "test:types": "phpstan analyse",
-        "test:arch": "pest --filter=arch",
+        "test:arch": "pest tests/Unit/ArchitecturalTest.php",
         "test:type-cov": "pest --type-coverage --min=100",
         "test:unit-cov": "php ./vendor/bin/pest --parallel --coverage",
         "test:unit": "php ./vendor/bin/pest --parallel",

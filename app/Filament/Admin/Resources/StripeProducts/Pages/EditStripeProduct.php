@@ -12,6 +12,7 @@ final class EditStripeProduct extends EditRecord
 {
     protected static string $resource = StripeProductResource::class;
 
+    #[\Override]
     protected function getHeaderActions(): array
     {
         return [

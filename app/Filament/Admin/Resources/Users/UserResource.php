@@ -45,6 +45,7 @@ final class UserResource extends Resource
         return UsersTable::configure($table);
     }
 
+    #[\Override]
     public static function getPages(): array
     {
         return [

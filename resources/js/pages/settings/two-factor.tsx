@@ -1,3 +1,7 @@
+import { Form, Head } from '@inertiajs/react';
+import { ShieldBan, ShieldCheck } from 'lucide-react';
+import { useState } from 'react';
+
 import HeadingSmall from '@/components/heading-small';
 import TwoFactorRecoveryCodes from '@/components/two-factor-recovery-codes';
 import TwoFactorSetupModal from '@/components/two-factor-setup-modal';
@@ -7,15 +11,18 @@ import { useTranslation } from '@/hooks/use-translation';
 import { useTwoFactorAuth } from '@/hooks/use-two-factor-auth';
 import AppLayout from '@/layouts/app-layout';
 import SettingsLayout from '@/layouts/settings/layout';
+import PasskeysSection from '@/pages/settings/partials/passkeys-section';
 import { type BreadcrumbItem } from '@/types';
 import { disable, enable, show } from '@/wayfinder/routes/two-factor';
-import { Form, Head } from '@inertiajs/react';
-import { ShieldBan, ShieldCheck } from 'lucide-react';
-import { useState } from 'react';
+
+import PasskeyData = App.Data.PasskeyData;
 
 interface TwoFactorProps {
     requiresConfirmation?: boolean;
     twoFactorEnabled?: boolean;
+    passkeysEnabled?: boolean;
+    hasPassword?: boolean;
+    passkeys?: PasskeyData[];
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -25,7 +32,13 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function TwoFactor({ requiresConfirmation = false, twoFactorEnabled = false }: TwoFactorProps) {
+export default function TwoFactor({
+    requiresConfirmation = false,
+    twoFactorEnabled = false,
+    passkeysEnabled = false,
+    hasPassword = true,
+    passkeys = [],
+}: TwoFactorProps) {
     const { qrCodeSvg, hasSetupData, manualSetupKey, clearSetupData, fetchSetupData, recoveryCodesList, fetchRecoveryCodes, errors } =
         useTwoFactorAuth();
     const [showSetupModal, setShowSetupModal] = useState<boolean>(false);
@@ -91,6 +104,8 @@ export default function TwoFactor({ requiresConfirmation = false, twoFactorEnabl
                         errors={errors}
                     />
                 </div>
+
+                {passkeysEnabled && <PasskeysSection passkeys={passkeys} hasPassword={hasPassword} />}
             </SettingsLayout>
         </AppLayout>
     );

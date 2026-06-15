@@ -17,6 +17,8 @@ return [
             'submit' => 'Log in',
             'no_account' => 'Don\'t have an account?',
             'sign_up' => 'Sign up',
+            'or' => 'or',
+            'passkey_button' => 'Sign in with a passkey',
         ],
 
         'register' => [
@@ -118,7 +120,7 @@ return [
             'nav' => [
                 'profile' => 'Profile',
                 'password' => 'Password',
-                'two_factor' => 'Two-Factor Auth',
+                'two_factor' => 'Security',
                 'appearance' => 'Appearance',
             ],
         ],
@@ -170,6 +172,30 @@ return [
             'disabled_paragraph' => 'When you enable two-factor authentication, you will be prompted for a secure pin during login. This pin can be retrieved from a TOTP-supported application on your phone.',
             'continue_setup' => 'Continue Setup',
             'enable_button' => 'Enable 2FA',
+        ],
+
+        'passkeys' => [
+            'title' => 'Passkeys',
+            'description' => 'Sign in without a password using Face ID, Touch ID, Windows Hello, or a security key.',
+            'set_password_first' => 'You must set a password before you can manage passkeys.',
+            'empty' => 'You have not registered any passkeys yet.',
+            'last_used' => 'Previously used to sign in',
+            'never_used' => 'Never used',
+            'not_supported' => 'This browser or device does not support passkeys.',
+            'add_button' => 'Add a passkey',
+            'delete_button' => 'Delete',
+            'cancel_button' => 'Cancel',
+            'continue_button' => 'Continue',
+            'create_button' => 'Create passkey',
+            'password_label' => 'Current password',
+            'confirm_title' => 'Confirm your password',
+            'confirm_description' => 'Please confirm your password before managing passkeys.',
+            'name_title' => 'Name your passkey',
+            'name_description' => 'Give this passkey a name so you can recognize it later, then follow the prompt from your device.',
+            'name_label' => 'Passkey name',
+            'name_placeholder' => 'e.g. MacBook Pro',
+            'delete_title' => 'Delete passkey',
+            'delete_description' => 'This passkey will no longer be able to sign in to your account. Confirm your password to continue.',
         ],
     ],
 ];

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Events;
 
 use App\Data\FlashData;
-use App\Enums\FlashMessageType;
 use App\Models\User;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
@@ -35,10 +34,16 @@ final class FlashMessageEvent implements ShouldBroadcastNow
     }
 
     /**
-     * @return array<string, FlashMessageType|string|null>
+     * @return array<string, mixed>
      */
     public function broadcastWith(): array
     {
-        return $this->flashData->toArray(); // @phpstan-ignore-line
+        $payload = [
+            'type' => $this->flashData->type->value,
+            'title' => $this->flashData->title,
+            'description' => $this->flashData->description,
+        ];
+
+        return [...$payload];
     }
 }

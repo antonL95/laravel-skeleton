@@ -1,4 +1,3 @@
-import { login } from '@/wayfinder/routes';
 import { Form, Head } from '@inertiajs/react';
 import { LoaderCircle } from 'lucide-react';
 
@@ -9,7 +8,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useTranslation } from '@/hooks/use-translation';
 import AuthLayout from '@/layouts/auth-layout';
-import PasswordResetLinkController from '@/wayfinder/actions/Laravel/Fortify/Http/Controllers/PasswordResetLinkController';
+import PasswordResetLinkController from '@/wayfinder/Laravel/Fortify/Http/Controllers/PasswordResetLinkController';
+import { login } from '@/wayfinder/routes';
 
 export default function ForgotPassword({ status }: { status?: string }) {
     const t = useTranslation();

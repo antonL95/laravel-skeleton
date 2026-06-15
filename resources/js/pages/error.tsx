@@ -1,8 +1,9 @@
+import { Head, Link } from '@inertiajs/react';
+
 import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/hooks/use-translation';
 import GuestLayout from '@/layouts/guest-layout';
 import { dashboard } from '@/wayfinder/routes';
-import { Head, Link } from '@inertiajs/react';
 
 export default function Error({ status }: { status: number }) {
     const title = {

@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useTranslation } from '@/hooks/use-translation';
 import AuthLayout from '@/layouts/auth-layout';
-import NewPasswordController from '@/wayfinder/actions/Laravel/Fortify/Http/Controllers/NewPasswordController';
+import NewPasswordController from '@/wayfinder/Laravel/Fortify/Http/Controllers/NewPasswordController';
 
 interface ResetPasswordProps {
     token: string;

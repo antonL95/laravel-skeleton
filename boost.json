@@ -1,17 +1,13 @@
 {
     "agents": [
-        "claude_code",
         "gemini",
-        "phpstorm"
+        "opencode"
     ],
+    "cloud": false,
     "editors": [
         "claude_code",
         "gemini",
-        "phpstorm"
+        "opencode"
     ],
-    "guidelines": [
-        "laravel/fortify",
-        "prism-php/prism",
-        "filament/filament"
-    ]
+    "guidelines": true
 }

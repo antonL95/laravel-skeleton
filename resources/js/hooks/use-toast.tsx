@@ -1,5 +1,6 @@
-import { SharedData } from '@/types';
 import { usePage } from '@inertiajs/react';
+
+import { SharedData } from '@/types';
 import FlashData = App.Data.FlashData;
 
 export default function useToast() {

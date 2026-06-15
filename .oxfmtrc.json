@@ -1,0 +1,40 @@
+{
+    "$schema": "./node_modules/oxfmt/configuration_schema.json",
+    "printWidth": 150,
+    "tabWidth": 4,
+    "singleQuote": true,
+    "semi": true,
+    "trailingComma": "all",
+    "ignorePatterns": [
+        "resources/js/components/ui/*",
+        "resources/js/ziggy.js",
+        "resources/views/mail/*",
+        "resources/js/wayfinder",
+        "resources/js/types/php-types.d.ts",
+        "resources/js/types/typescript-transformer-manifest.json"
+    ],
+    "sortImports": {
+        "groups": [
+            ["value-builtin", "value-external"],
+            "type-external",
+            "value-internal",
+            "type-internal",
+            ["value-parent", "value-sibling", "value-index"],
+            ["type-parent", "type-sibling", "type-index"],
+            "unknown"
+        ]
+    },
+    "sortTailwindcss": {
+        "stylesheet": "./resources/css/app.css",
+        "functions": ["clsx", "cn"]
+    },
+    "sortPackageJson": true,
+    "overrides": [
+        {
+            "files": ["**/*.yml", "**/*.yaml"],
+            "options": {
+                "tabWidth": 2
+            }
+        }
+    ]
+}

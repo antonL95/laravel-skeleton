@@ -1,15 +1,16 @@
+import { Link } from '@inertiajs/react';
+import { type PropsWithChildren } from 'react';
+
 import Heading from '@/components/heading';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { useTranslation } from '@/hooks/use-translation';
 import { cn } from '@/lib/utils';
 import { type NavItem } from '@/types';
-import PasswordController from '@/wayfinder/actions/App/Http/Controllers/Settings/PasswordController';
+import PasswordController from '@/wayfinder/App/Http/Controllers/Settings/PasswordController';
 import { appearance } from '@/wayfinder/routes';
 import { edit } from '@/wayfinder/routes/profile';
 import { show } from '@/wayfinder/routes/two-factor';
-import { Link } from '@inertiajs/react';
-import { type PropsWithChildren } from 'react';
 
 const sidebarNavItems: NavItem[] = [
     {

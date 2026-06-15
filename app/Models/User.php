@@ -13,9 +13,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Cashier\Billable;
+use Laravel\Fortify\Contracts\PasskeyUser;
+use Laravel\Fortify\PasskeyAuthenticatable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 
-final class User extends Authenticatable implements FilamentUser, MustVerifyEmail
+final class User extends Authenticatable implements FilamentUser, MustVerifyEmail, PasskeyUser
 {
     use Billable;
 
@@ -23,6 +25,7 @@ final class User extends Authenticatable implements FilamentUser, MustVerifyEmai
     use HasFactory;
 
     use Notifiable;
+    use PasskeyAuthenticatable;
     use TwoFactorAuthenticatable;
 
     /**
@@ -93,6 +96,7 @@ final class User extends Authenticatable implements FilamentUser, MustVerifyEmai
      *     password: 'hashed',
      * }
      */
+    #[\Override]
     protected function casts(): array
     {
         return [

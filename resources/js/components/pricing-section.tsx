@@ -1,11 +1,13 @@
-import { Button } from '@/components/ui/button';
-import { useTranslation } from '@/hooks/use-translation';
-import type { SharedData } from '@/types';
-import { dashboard } from '@/wayfinder/routes';
-import { store } from '@/wayfinder/routes/checkout';
 import { Link, usePage } from '@inertiajs/react';
 import { clsx } from 'clsx';
 import { CheckIcon } from 'lucide-react';
+
+import { Button } from '@/components/ui/button';
+import { useTranslation } from '@/hooks/use-translation';
+import { dashboard } from '@/wayfinder/routes';
+import { store } from '@/wayfinder/routes/checkout';
+
+import type { SharedData } from '@/types';
 import StripeProductData = App.Data.StripeProductData;
 
 export default function PricingSection({ pricing }: { pricing?: StripeProductData[] }) {

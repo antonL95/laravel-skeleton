@@ -14,13 +14,10 @@ use Laravel\Octane\Events\WorkerErrorOccurred;
 use Laravel\Octane\Events\WorkerStarting;
 use Laravel\Octane\Events\WorkerStopping;
 use Laravel\Octane\Listeners\CloseMonologHandlers;
-use Laravel\Octane\Listeners\CollectGarbage;
-use Laravel\Octane\Listeners\DisconnectFromDatabases;
 use Laravel\Octane\Listeners\EnsureUploadedFilesAreValid;
 use Laravel\Octane\Listeners\EnsureUploadedFilesCanBeMoved;
 use Laravel\Octane\Listeners\FlushOnce;
 use Laravel\Octane\Listeners\FlushTemporaryContainerInstances;
-use Laravel\Octane\Listeners\FlushUploadedFiles;
 use Laravel\Octane\Listeners\ReportException;
 use Laravel\Octane\Listeners\StopWorkerIfNecessary;
 use Laravel\Octane\Octane;
@@ -222,5 +219,18 @@ return [
     */
 
     'max_execution_time' => 30,
+
+    /*
+    |--------------------------------------------------------------------------
+    | Octane State File
+    |--------------------------------------------------------------------------
+    |
+    | This value determines where Octane stores the state file used to track
+    | the running server's master process ID and admin endpoint, which is
+    | read by various Octane commands. You may tweak this if necessary.
+    |
+    */
+
+    'state_file' => env('OCTANE_STATE_FILE', storage_path('logs/octane-server-state.json')),
 
 ];

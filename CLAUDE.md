@@ -69,3 +69,5 @@ Detailed guidelines are in `.claude/rules/` - they load automatically based on f
 | `filament.md` | Filament (`app/Filament/**/*.php`) |
 | `ai-sdk.md` | Laravel AI SDK (`**/*.php`) |
 | `browser-testing.md` | Browser tests (`tests/Browser/**/*.php`, `resources/js/**/*.{ts,tsx}`) |
+
+Comment restrictions live with the language they apply to: `php.md` for PHP, Blade, and PHPDoc; `frontend.md` for TS, TSX, and CSS.

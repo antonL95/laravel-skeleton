@@ -84,6 +84,14 @@ User-facing copy is translated, never hardcoded in components.
 
 - For a new CRUD feature, create only an `index.tsx` page and, in a `partials/` folder for the feature, a single form component that handles both create and edit, shown inside a `Dialog`. See the project front-end guideline for the canonical example.
 
+## Comments
+
+- Do not write comments in TS or TSX files. No JSDoc prose, no `{/* Section */}` JSX labels, no code narration. Code should explain itself through naming and structure.
+- `TODO`, `FIXME`, `HACK`, `XXX`, commented-out code, and `{/* Section */}` banner labels must not exist anywhere in the repo. Never add one, and delete any you touch. Track pending work in the issue tracker, not in the source.
+- In a `.ts` or `.tsx` file the signature carries the type, so a JSDoc block has nothing to add. In a plain `.js` file with no TypeScript to carry them, a JSDoc `@type`, `@param`, or `@returns` annotation is allowed and is the only JSDoc that is.
+- Do not write `/* */` comments in CSS files.
+- A comment survives only when a tool acts on the code because of it. These are directives, not comments, and must stay: `@ts-expect-error`, `@ts-ignore`, `@ts-nocheck`, `// @ts-check`, `/// <reference ... />` triple-slash directives, the `/** @jsxImportSource ... */` pragma, bundler pragmas (`/* @vite-ignore */`, `/* webpackChunkName: "..." */`), formatter pragmas (`// prettier-ignore`, `// oxfmt-ignore`), `/*! */` preserved-license blocks, `/* stylelint-disable-next-line <rule> */` in CSS, and oxlint suppressions naming a specific rule.
+
 ## File & component naming
 
 - Filenames are **kebab-case** for pages, components, and hooks (e.g. `passkeys-section.tsx`, `use-translation.tsx`).

@@ -4,13 +4,11 @@ FROM oven/bun:1 AS bun-source
 FROM serversideup/php:8.5-cli-v5.0.2 AS worker-base
 USER root
 RUN install-php-extensions intl bcmath gd gmp
-COPY --chmod=644 docker/php/zzz-custom-php.ini /usr/local/etc/php/conf.d/
 USER www-data
 
 FROM serversideup/php:8.5-frankenphp-v5.0.2 AS web-base
 USER root
 RUN install-php-extensions intl bcmath gd gmp
-COPY --chmod=644 docker/php/zzz-custom-php.ini /usr/local/etc/php/conf.d/
 USER www-data
 
 # vendor: composer deps cached on composer.lock, then full source + scripts

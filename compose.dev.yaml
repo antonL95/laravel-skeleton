@@ -1,0 +1,188 @@
+x-php-image: &php-image
+  build:
+    context: .
+    dockerfile: Dockerfile
+    target: web-base
+  image: laravel-skeleton-dev-php
+
+x-hardening: &hardening
+  security_opt:
+    - no-new-privileges:true
+
+x-project-volumes: &project-volumes
+  - &project .:/var/www/html
+  - &ro-git ./.git:/var/www/html/.git:ro
+  - &ro-claude ./.claude:/var/www/html/.claude:ro
+  - &ro-gemini ./.gemini:/var/www/html/.gemini:ro
+  - &ro-github ./.github:/var/www/html/.github:ro
+  - &ro-agents-md ./AGENTS.md:/var/www/html/AGENTS.md:ro
+  - &ro-claude-md ./CLAUDE.md:/var/www/html/CLAUDE.md:ro
+  - &ro-gemini-md ./GEMINI.md:/var/www/html/GEMINI.md:ro
+  - &ro-mcp-json ./.mcp.json:/var/www/html/.mcp.json:ro
+  - &ro-idea ./.idea:/var/www/html/.idea:ro
+  - &ro-bin ./bin:/var/www/html/bin:ro
+  - &ro-docker ./docker:/var/www/html/docker:ro
+  - &ro-compose-dev-yaml ./compose.dev.yaml:/var/www/html/compose.dev.yaml:ro
+  - &ro-dockerfile ./Dockerfile:/var/www/html/Dockerfile:ro
+  - &ro-docker-compose-yaml ./docker-compose.yaml:/var/www/html/docker-compose.yaml:ro
+
+x-dev-php-env: &dev-php-env
+  APP_SERVICES_CACHE: /tmp/laravel-services.php
+  PHP_MEMORY_LIMIT: 512M
+  PHP_OPCACHE_VALIDATE_TIMESTAMPS: 1
+  PHP_OPCACHE_REVALIDATE_FREQ: 0
+
+x-app-secrets: &app-secrets
+  APP_KEY:
+
+x-php-app: &php-app
+  <<: [*php-image, *hardening]
+  volumes: *project-volumes
+  environment:
+    <<: [*app-secrets, *dev-php-env]
+  restart: unless-stopped
+
+services:
+  php:
+    <<: *php-app
+    command:
+      [
+        'php', 'artisan', 'octane:start',
+        '--server=frankenphp',
+        '--host=0.0.0.0',
+        '--port=8080',
+        '--workers=2',
+        '--max-requests=500',
+        '--watch',
+      ]
+    labels:
+      dev.orbstack.domains: ${COMPOSE_PROJECT_NAME:-laravel-skeleton}.orb.local
+      dev.orbstack.http-port: 8080
+    healthcheck:
+      test: ['CMD', 'curl', '--fail', '--silent', '--output', '/dev/null', 'http://127.0.0.1:8080/up']
+      interval: 5s
+      timeout: 3s
+      retries: 30
+      start_period: 10s
+
+  queue:
+    <<: *php-app
+    command: ['php', 'artisan', 'queue:listen', '--tries=1', '--timeout=0']
+    healthcheck:
+      test: ['CMD', 'healthcheck-queue']
+      interval: 30s
+
+  reverb:
+    <<: [*php-image, *hardening]
+    command: ['php', 'artisan', 'reverb:start', '--host=0.0.0.0', '--port=8081']
+    volumes: *project-volumes
+    environment:
+      <<: *dev-php-env
+    labels:
+      dev.orbstack.domains: reverb.${COMPOSE_PROJECT_NAME:-laravel-skeleton}.orb.local
+      dev.orbstack.http-port: 8081
+    healthcheck:
+      test: ['CMD', 'healthcheck-reverb']
+      interval: 30s
+    restart: unless-stopped
+
+  codegen:
+    <<: [*php-image, *hardening]
+    command: ['bash', 'docker/dev/codegen.sh']
+    volumes: *project-volumes
+    environment:
+      <<: *dev-php-env
+    healthcheck:
+      test: ['CMD', 'test', '-f', '/tmp/codegen.ready']
+      interval: 2s
+      timeout: 2s
+      retries: 90
+    restart: unless-stopped
+
+  bun:
+    image: oven/bun:1.4.3-alpine
+    working_dir: /var/www/html
+    command: ['bun', '--bun', 'run', 'dev']
+    environment:
+      DEV_VITE_CONTAINER: '1'
+      DEV_VITE_ORIGIN: https://vite.${COMPOSE_PROJECT_NAME:-laravel-skeleton}.orb.local
+    volumes:
+      - *project
+      - *ro-git
+      - *ro-claude
+      - *ro-gemini
+      - *ro-github
+      - *ro-agents-md
+      - *ro-claude-md
+      - *ro-gemini-md
+      - *ro-mcp-json
+      - *ro-idea
+      - *ro-bin
+      - *ro-docker
+      - *ro-compose-dev-yaml
+      - *ro-dockerfile
+      - *ro-docker-compose-yaml
+      - node_modules:/var/www/html/node_modules
+    labels:
+      dev.orbstack.domains: vite.${COMPOSE_PROJECT_NAME:-laravel-skeleton}.orb.local
+      dev.orbstack.http-port: 5173
+    <<: *hardening
+    cap_drop:
+      - ALL
+    depends_on:
+      codegen:
+        condition: service_healthy
+    restart: unless-stopped
+
+  tools:
+    build:
+      context: docker/dev
+      additional_contexts:
+        base: service:php
+    image: laravel-skeleton-dev-tools
+    command: ['bash', 'docker/dev/with-orbstack-ca.sh', 'sleep', 'infinity']
+    init: true
+    healthcheck:
+      disable: true
+    volumes:
+      - *project
+      - *ro-git
+      - *ro-claude
+      - *ro-gemini
+      - *ro-github
+      - *ro-agents-md
+      - *ro-claude-md
+      - *ro-gemini-md
+      - *ro-mcp-json
+      - *ro-idea
+      - *ro-bin
+      - *ro-docker
+      - *ro-compose-dev-yaml
+      - *ro-dockerfile
+      - *ro-docker-compose-yaml
+      - ${DEV_GIT_COMMON_DIR:-./.git}:${DEV_GIT_COMMON_DIR:-/mnt/main-git}:ro
+      - node_modules:/var/www/html/node_modules
+      - composer-cache:/composer/cache
+      - pest-cache:/var/www/.pest
+      - rector-cache:/tmp/rector_cached_files
+      - phpstan-cache:/tmp/phpstan
+    environment:
+      DEV_VITE_CONTAINER: '1'
+      SHOW_WELCOME_MESSAGE: 'false'
+      PHP_MEMORY_LIMIT: '-1'
+      APP_SERVICES_CACHE: /tmp/laravel-services.php
+      COMPOSER_PROCESS_TIMEOUT: '0'
+    <<: *hardening
+
+  mailpit:
+    image: axllent/mailpit:v1.31.6
+    restart: unless-stopped
+
+volumes:
+  node_modules:
+  composer-cache:
+    name: laravel-skeleton-composer-cache
+    external: true
+  pest-cache:
+  rector-cache:
+  phpstan-cache:

@@ -33,3 +33,5 @@ frankenphp-worker.php
 
 # EnvKit — per-project PHP error log (do not commit)
 php_error.log
+.env.herd-backup
+.dev.local

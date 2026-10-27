@@ -1,0 +1,401 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+project_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
+cd "$project_root"
+
+keychain_service="bws-dev"
+local_config="$project_root/.dev.local"
+secret_prefix="LARAVEL_SKELETON_"
+main_stack_name="laravel-skeleton"
+shared_composer_cache="$main_stack_name-composer-cache"
+app_service="php"
+secret_services=(php queue)
+test_script="test:unit"
+browser_script=""
+composer_secrets=""
+
+fail() {
+    echo "bin/dev: $*" >&2
+    exit 1
+}
+
+worktree_paths() {
+    git -C "$project_root" worktree list --porcelain | sed -n 's/^worktree //p'
+}
+
+main_worktree="$(worktree_paths | head -n 1)"
+[ -n "$main_worktree" ] || fail "$project_root is not a git checkout."
+
+stack_name_for() {
+    local base
+    if [ "$1" = "$main_worktree" ]; then
+        echo "$main_stack_name"
+        return
+    fi
+
+    base="$(basename "$1" | tr '[:upper:]' '[:lower:]' | sed -e 's/[^a-z0-9-]/-/g' -e 's/--*/-/g' -e 's/^-//' -e 's/-$//')"
+    case "$base" in
+        "$main_stack_name"-*) echo "$base" ;;
+        *) echo "$main_stack_name-$base" ;;
+    esac
+}
+
+export COMPOSE_FILE="$project_root/compose.dev.yaml"
+COMPOSE_PROJECT_NAME="$(stack_name_for "$project_root")"
+export COMPOSE_PROJECT_NAME
+DEV_GIT_COMMON_DIR="$(git -C "$project_root" rev-parse --path-format=absolute --git-common-dir)"
+export DEV_GIT_COMMON_DIR
+
+usage() {
+    cat <<USAGE
+Usage: bin/dev <command> [arguments]
+
+  up                Build and start the stack with secrets from Bitwarden
+  restart           Recreate the app containers with fresh secrets from Bitwarden
+  down              Stop the stack (volumes are kept)
+  compose ...       Run any docker compose command against this checkout's stack
+  secrets:check     List which secrets Bitwarden holds for this app (names only)
+  logs [service]    Follow logs
+  artisan ...       Run an Artisan command in the $app_service container
+  tinker            Open Tinker in the $app_service container
+  shell             Open a shell in the $app_service container
+  test ...          Run composer $test_script in the tools container
+  test:browser ...  Build assets and run the browser tests in the tools container
+  tools ...         Run a command in the tools container (no secrets)
+  composer ...      Run Composer in a one off tools container without app secrets
+  bun ...           Run Bun in a one off bun container without secrets
+
+  worktree:init               Prepare .env and .dev.local in a new git worktree
+  worktree:list               List the worktrees with their stacks
+  worktree:remove <name> [--force]
+                              Delete a worktree's stack (database included) and the worktree
+  worktree:prune [--yes]      Delete stacks whose worktree no longer exists
+USAGE
+}
+
+no_tty=()
+if ! { [ -t 0 ] && [ -t 1 ]; }; then
+    no_tty=(-T)
+fi
+
+read_project_id() {
+    [ -f "$local_config" ] || fail "missing $local_config. Create it with a line BWS_PROJECT_ID=<your Bitwarden project id>."
+
+    local value
+    value="$(sed -n 's/^BWS_PROJECT_ID=//p' "$local_config" | tail -n 1 | tr -d '"'"'"' \r')"
+    [ -n "$value" ] || fail "BWS_PROJECT_ID is not set in $local_config."
+
+    echo "$value"
+}
+
+read_access_token() {
+    command -v security >/dev/null 2>&1 || fail "the macOS security tool is not available."
+
+    local token
+    if ! token="$(security find-generic-password -s "$keychain_service" -w 2>/dev/null)"; then
+        fail "no Keychain item named $keychain_service. Add it with: security add-generic-password -a \"\$USER\" -s $keychain_service -w"
+    fi
+    [ -n "$token" ] || fail "the Keychain item $keychain_service is empty."
+
+    echo "$token"
+}
+
+with_secrets() {
+    command -v bws >/dev/null 2>&1 || fail "bws is not installed. See readme.md, Local development."
+
+    local project_id token
+    project_id="$(read_project_id)"
+    token="$(read_access_token)"
+
+    BWS_ACCESS_TOKEN="$token" bws run --project-id "$project_id" -- env -u BWS_ACCESS_TOKEN "$project_root/bin/dev" __unprefix "$@"
+}
+
+expected_secret_names() {
+    sed -n '/^x-app-secrets:/,/^[^ ]/s/^ *\([A-Z_][A-Z0-9_]*\):.*/\1/p' "$COMPOSE_FILE"
+    for name in $composer_secrets; do
+        echo "$name"
+    done
+}
+
+check_secrets() {
+    command -v bws >/dev/null 2>&1 || fail "bws is not installed. See readme.md, Local development."
+    command -v jq >/dev/null 2>&1 || fail "jq is not installed."
+
+    local project_id token stored expected name status missing=0
+    project_id="$(read_project_id)"
+    token="$(read_access_token)"
+
+    stored="$(BWS_ACCESS_TOKEN="$token" bws secret list "$project_id" -o json -c no | jq -r '.[].key')" \
+        || fail "bws could not read project $project_id. Check the token, the server (bws config server-base) and the machine account's project access."
+    expected="$(expected_secret_names)"
+
+    echo "Project $project_id holds $(grep -c . <<<"$stored" || true) secrets."
+    for name in $expected; do
+        if grep -qx "$secret_prefix$name" <<<"$stored"; then
+            status="set as $secret_prefix$name"
+        elif grep -qx "$name" <<<"$stored"; then
+            status="set as shared $name"
+        else
+            status="missing"
+            missing=$((missing + 1))
+        fi
+        printf '  %-36s %s\n' "$name" "$status"
+    done
+
+    for name in $(grep "^$secret_prefix" <<<"$stored" || true); do
+        grep -qx "${name#"$secret_prefix"}" <<<"$expected" || echo "  $name is in Bitwarden but not listed in x-app-secrets"
+    done
+
+    echo "$missing of $(wc -w <<<"$expected" | tr -d ' ') expected secrets are missing."
+}
+
+check_env_file() {
+    [ -f .env ] || fail "missing .env. In a worktree run bin/dev worktree:init, otherwise copy .env.example."
+
+    local unexpected
+    unexpected="$(grep -E '^[[:space:]]*(export[[:space:]]+)?COMPOSE_' .env \
+        | grep -vxF -e 'COMPOSE_FILE=compose.dev.yaml' -e "COMPOSE_PROJECT_NAME=$COMPOSE_PROJECT_NAME" || true)"
+    [ -z "$unexpected" ] || fail ".env contains a Compose setting bin/dev does not expect, refusing to run: $unexpected"
+}
+
+remove_stack() {
+    local volumes
+    docker compose -p "$1" down --volumes --remove-orphans --timeout 5
+    volumes="$(docker volume ls -q --filter "label=com.docker.compose.project=$1")"
+    if [ -n "$volumes" ]; then
+        docker volume rm $volumes >/dev/null
+    fi
+}
+
+init_worktree() {
+    [ "$project_root" != "$main_worktree" ] || fail "this is the main checkout. Run worktree:init inside a linked worktree."
+    [ ! -e .env ] || fail ".env already exists in $project_root."
+    [ -f "$main_worktree/.env" ] || fail "the main checkout has no .env to copy."
+
+    grep -vE '^COMPOSE_PROJECT_NAME=' "$main_worktree/.env" \
+        | sed "s/$main_stack_name\.orb\.local/$COMPOSE_PROJECT_NAME.orb.local/g" > .env
+    echo "COMPOSE_PROJECT_NAME=$COMPOSE_PROJECT_NAME" >> .env
+
+    if [ -f "$main_worktree/.dev.local" ]; then
+        cp "$main_worktree/.dev.local" .dev.local
+    fi
+
+    local key
+    for key in "$main_worktree"/storage/oauth-*.key; do
+        if [ -f "$key" ]; then
+            cp -p "$key" storage/
+        fi
+    done
+
+    cat <<DONE
+Prepared stack $COMPOSE_PROJECT_NAME at https://$COMPOSE_PROJECT_NAME.orb.local. Next:
+  bin/dev up
+  bin/dev composer install
+  bin/dev bun install
+  bin/dev artisan migrate
+DONE
+}
+
+list_worktrees() {
+    local path name running
+    while IFS= read -r path; do
+        name="$(stack_name_for "$path")"
+        running="$(docker ps -q --filter "label=com.docker.compose.project=$name" | wc -l | tr -d ' ')"
+        printf '%-32s %3s running  %s\n' "$name" "$running" "$path"
+    done < <(worktree_paths)
+}
+
+resolve_worktree() {
+    local target="$1" resolved="" path
+    resolved="$(cd "$target" 2>/dev/null && pwd -P || true)"
+
+    while IFS= read -r path; do
+        if [ "$path" = "$target" ] || [ "$path" = "$resolved" ] || [ "$(basename "$path")" = "$target" ] || [ "$(stack_name_for "$path")" = "$target" ]; then
+            echo "$path"
+            return
+        fi
+    done < <(worktree_paths)
+}
+
+remove_worktree() {
+    local target="${1:-}" force="${2:-}" path name
+    [ -n "$target" ] || fail "usage: bin/dev worktree:remove <name or path> [--force]"
+    [ -z "$force" ] || [ "$force" = "--force" ] || fail "unknown option $force."
+
+    path="$(resolve_worktree "$target")"
+    [ -n "$path" ] || fail "no worktree matches $target. See bin/dev worktree:list."
+    [ "$path" != "$main_worktree" ] || fail "refusing to remove the main checkout."
+    [ "$path" != "$project_root" ] || fail "run worktree:remove from another checkout, not from the worktree being removed."
+
+    if [ -d "$path" ] && [ -z "$force" ] && [ -n "$(git -C "$path" status --porcelain)" ]; then
+        fail "$path has uncommitted changes. Commit or stash them, or pass --force to discard them."
+    fi
+
+    name="$(stack_name_for "$path")"
+    remove_stack "$name"
+
+    if [ -d "$path" ]; then
+        git -C "$main_worktree" worktree remove ${force:+--force} "$path"
+    else
+        git -C "$main_worktree" worktree prune
+    fi
+
+    echo "Removed $path and its stack $name. The branch is kept."
+}
+
+prune_stacks() {
+    local confirm="${1:-}" live name answer
+    local stale=()
+    [ -z "$confirm" ] || [ "$confirm" = "--yes" ] || fail "unknown option $confirm."
+
+    git -C "$main_worktree" worktree prune
+    live="$(worktree_paths | while IFS= read -r path; do stack_name_for "$path"; done)"
+
+    for name in $({ docker ps -a --format '{{.Label "com.docker.compose.project"}}'; docker volume ls --format '{{.Label "com.docker.compose.project"}}'; } | grep "^$main_stack_name-" | sort -u); do
+        if grep -qx "$name" <<<"$live"; then
+            continue
+        fi
+        if docker volume inspect "${name}_pest-cache" "${name}_rector-cache" >/dev/null 2>&1; then
+            stale+=("$name")
+        fi
+    done
+
+    if [ "${#stale[@]}" -eq 0 ]; then
+        echo "No stacks are left over from removed worktrees."
+        return
+    fi
+
+    echo "Stacks without a worktree:"
+    printf '  %s\n' "${stale[@]}"
+
+    if [ "$confirm" != "--yes" ]; then
+        read -r -p "Delete their containers and volumes, databases included? [y/N] " answer
+        case "$answer" in
+            y | Y) ;;
+            *)
+                echo "Nothing deleted."
+                return
+                ;;
+        esac
+    fi
+
+    for name in "${stale[@]}"; do
+        remove_stack "$name"
+    done
+}
+
+unprefix_secrets_and_exec() {
+    local name prefixed
+    for name in $(expected_secret_names); do
+        prefixed="$secret_prefix$name"
+        if [ -n "${!prefixed+set}" ]; then
+            export "$name=${!prefixed}"
+            unset "$prefixed"
+        fi
+    done
+
+    exec "$@"
+}
+
+throwaway_app_key() {
+    echo "base64:$(head -c 32 /dev/urandom | base64)"
+}
+
+compose_exec() {
+    docker compose exec ${no_tty[@]+"${no_tty[@]}"} "$@"
+}
+
+[ "$#" -gt 0 ] || { usage; exit 1; }
+
+subcommand="$1"
+shift
+
+case "$subcommand" in
+    help | -h | --help | secrets:check | __unprefix | worktree:*) ;;
+    *)
+        check_env_file
+        docker volume create "$shared_composer_cache" >/dev/null
+        ;;
+esac
+
+case "$subcommand" in
+    up)
+        with_secrets docker compose up -d --build "$@"
+        ;;
+    restart)
+        with_secrets docker compose up -d --build --force-recreate "${secret_services[@]}" "$@"
+        ;;
+    down)
+        docker compose down "$@"
+        ;;
+    logs)
+        docker compose logs -f "$@"
+        ;;
+    compose)
+        docker compose "$@"
+        ;;
+    artisan)
+        compose_exec "$app_service" php artisan "$@"
+        ;;
+    tinker)
+        compose_exec "$app_service" php artisan tinker "$@"
+        ;;
+    shell)
+        compose_exec "$app_service" bash "$@"
+        ;;
+    test)
+        compose_exec -e "APP_KEY=$(throwaway_app_key)" tools composer "$test_script" -- "$@"
+        ;;
+    test:browser)
+        [ -n "$browser_script" ] || fail "this app has no browser tests."
+        docker compose stop bun
+        docker compose run --rm --no-deps bun bun run build
+        status=0
+        compose_exec -e "APP_KEY=$(throwaway_app_key)" tools composer "$browser_script" -- "$@" || status=$?
+        docker compose start bun
+        exit "$status"
+        ;;
+    tools)
+        compose_exec -e "APP_KEY=$(throwaway_app_key)" tools "$@"
+        ;;
+    composer)
+        if [ -n "$composer_secrets" ]; then
+            secret_flags=()
+            for name in $composer_secrets; do
+                secret_flags+=(-e "$name")
+            done
+            with_secrets docker compose run --rm --no-deps -e "APP_KEY=$(throwaway_app_key)" "${secret_flags[@]}" ${no_tty[@]+"${no_tty[@]}"} tools bash docker/dev/with-orbstack-ca.sh composer "$@"
+        else
+            docker compose run --rm --no-deps -e "APP_KEY=$(throwaway_app_key)" ${no_tty[@]+"${no_tty[@]}"} tools bash docker/dev/with-orbstack-ca.sh composer "$@"
+        fi
+        ;;
+    bun)
+        docker compose run --rm --no-deps ${no_tty[@]+"${no_tty[@]}"} bun bun "$@"
+        ;;
+    secrets:check)
+        check_secrets
+        ;;
+    worktree:init)
+        init_worktree
+        ;;
+    worktree:list)
+        list_worktrees
+        ;;
+    worktree:remove)
+        remove_worktree "$@"
+        ;;
+    worktree:prune)
+        prune_stacks "$@"
+        ;;
+    __unprefix)
+        unprefix_secrets_and_exec "$@"
+        ;;
+    help | -h | --help)
+        usage
+        ;;
+    *)
+        usage
+        exit 1
+        ;;
+esac

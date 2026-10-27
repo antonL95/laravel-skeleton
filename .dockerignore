@@ -1,0 +1,5 @@
+.env.herd-backup
+.dev.local
+compose.dev.yaml
+docker/dev
+bin/dev

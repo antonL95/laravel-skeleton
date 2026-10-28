@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 FROM oven/bun:1.4.3-debian AS bun-source
 
-FROM serversideup/php:8.5-frankenphp-v5.0.3
+FROM serversideup/php:8.5-frankenphp-v5.0.5
 USER root
 ARG PLAYWRIGHT_VERSION=1.64.1
 ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright

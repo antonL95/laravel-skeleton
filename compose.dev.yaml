@@ -134,7 +134,7 @@ services:
   tools:
     build:
       context: docker/dev
-    image: devstack-tools:1
+    image: devstack-tools:2
     command: ['bash', 'docker/dev/with-orbstack-ca.sh', 'sleep', 'infinity']
     init: true
     healthcheck:

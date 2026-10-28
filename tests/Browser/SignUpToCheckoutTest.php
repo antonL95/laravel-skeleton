@@ -26,7 +26,8 @@ test('user can register, verify email, access dashboard, logout, and login again
         ->fill('email', $userData['email'])
         ->fill('password', $userData['password'])
         ->fill('password_confirmation', $userData['password_confirmation'])
-        ->press('Create account');
+        ->press('Create account')
+        ->assertSee('Please verify your email address');
 
     assertDatabaseHas(User::class, [
         'name' => $userData['name'],
@@ -55,7 +56,8 @@ test('user can register, verify email, access dashboard, logout, and login again
     expect($user->fresh()->email_verified_at)->not->toBeNull();
 
     $pendingAwaitablePage->press('[data-slot="dropdown-menu-trigger"]');
-    $pendingAwaitablePage->press('[data-testid="logout"]');
+    $pendingAwaitablePage->press('[data-testid="logout"]')
+        ->assertPathIs('/');
 
     $pendingAwaitablePage->navigate('/login')
         ->assertSee('Log in to your account')

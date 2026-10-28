@@ -59,7 +59,7 @@ Detailed guidelines are in `.claude/rules/` - they load automatically based on f
 |------|-------|
 | `foundation.md` | Global conventions |
 | `boost.md` | Laravel Boost MCP tools |
-| `herd.md` | Laravel Herd environment |
+| `dev-environment.md` | Docker stack, `bin/dev` and the local URLs |
 | `php.md` | PHP files (`**/*.php`) |
 | `laravel.md` | Laravel patterns (`**/*.php`) |
 | `octane.md` | Octane runtime constraints (`**/*.php`) |

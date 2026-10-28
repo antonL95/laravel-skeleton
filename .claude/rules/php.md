@@ -55,8 +55,8 @@ protected function isAccessible(User $user, ?string $path = null): bool
 
 ## Laravel Pint
 
-- Run `vendor/bin/pint --dirty --format agent` before finalizing changes to ensure your code matches the project's expected style.
-- Do not run `vendor/bin/pint --test --format agent`, simply run `vendor/bin/pint --format agent` to fix any formatting issues.
+- Run `bin/dev tools vendor/bin/pint --dirty --format agent` before finalizing changes to ensure your code matches the project's expected style.
+- Do not run Pint with `--test`; run `bin/dev tools vendor/bin/pint --format agent` to fix any formatting issues.
 
 ## Exceptions
 

@@ -1,16 +1,28 @@
 {
     "mcpServers": {
         "laravel-boost": {
-            "command": "php",
+            "command": "docker",
             "args": [
+                "compose",
+                "exec",
+                "-T",
+                "php",
+                "php",
                 "artisan",
                 "boost:mcp"
             ]
         },
         "shadcn": {
-            "command": "npx",
+            "command": "docker",
             "args": [
-                "shadcn@latest",
+                "compose",
+                "run",
+                "--rm",
+                "--no-deps",
+                "-T",
+                "bun",
+                "bunx",
+                "shadcn@4.22.1",
                 "mcp"
             ]
         }

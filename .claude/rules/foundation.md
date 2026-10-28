@@ -26,7 +26,7 @@ description: Global project conventions, structure, and communication guidelines
 
 ## Frontend Bundling
 
-- If the user doesn't see a frontend change reflected in the UI, it could mean they need to run `bun run build`, `bun run dev`, or `composer run dev`. Ask them.
+- If the user doesn't see a frontend change reflected in the UI, check that the stack is up with `bin/dev compose ps`: Vite runs in its `bun` container. Ask them.
 
 ## Documentation Files
 

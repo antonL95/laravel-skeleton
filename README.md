@@ -4,7 +4,7 @@ A modern, full-stack Laravel application skeleton with a React/Inertia frontend,
 
 ## Overview
 
-- **Backend**: Laravel 13 (PHP 8.4+)
+- **Backend**: Laravel 13 (PHP 8.5)
 - **Frontend**: React 19 + TypeScript 6 + Inertia.js 3 (via the `@inertiajs/vite` plugin), bundled with Vite 8
 - **Admin Panel**: Filament 5
 - **Authentication**: Laravel Fortify (login, registration, password reset, email verification, two-factor TOTP, and **passkeys / WebAuthn**) plus Laravel Socialite (Google OAuth)
@@ -17,108 +17,13 @@ A modern, full-stack Laravel application skeleton with a React/Inertia frontend,
 - **Server runtime**: Laravel Octane (FrankenPHP) with Inertia SSR
 - **Testing**: Pest 4 (unit, feature, and browser tests)
 
-## Requirements
-
-- **PHP**: 8.4+ (the Docker images use PHP 8.5)
-- **Composer**: PHP dependency manager
-- **Bun**: JavaScript runtime and package manager (this project uses Bun, not npm/yarn/pnpm; the lockfile is `bun.lock`)
-- **Database**: PostgreSQL (default) or SQLite for local development
-- **Redis**: caching and queues (recommended)
-
-### Optional Services
-
-- **AWS S3** or **DigitalOcean Spaces**: file storage
-- **Stripe**: payment processing
-- **Google OAuth**: social authentication
-- **Laravel Nightwatch**: observability
-
-## Setup & Installation
-
-### 1. Clone and install dependencies
-
-```bash
-git clone https://github.com/antonL95/laravel-skeleton
-cd laravel-skeleton
-composer install
-bun install
-```
-
-### 2. Environment configuration
-
-```bash
-cp .env.example .env
-php artisan key:generate
-```
-
-### 3. Database setup
-
-```bash
-# SQLite (default for local development)
-touch database/database.sqlite
-
-# Or configure PostgreSQL in .env:
-# DB_CONNECTION=pgsql
-# DB_DATABASE=your_database_name
-# DB_USERNAME=your_username
-# DB_PASSWORD=your_password
-
-php artisan migrate
-```
-
-### 4. Run the app
-
-```bash
-# Start the full local stack (server, queue, logs, Vite) in one command
-composer run dev
-
-# Or build assets directly
-bun run build       # client build
-bun run build:ssr   # client + SSR build
-bun run dev         # Vite dev server
-```
-
-## Development Commands
-
-### Composer scripts
-
-```bash
-# Run the full quality gate: lint (Pint, oxfmt, oxlint, tsc, Rector), types (PHPStan), arch, and unit/feature tests
-composer test
-
-# Individual suites
-composer test:unit     # Pest unit + feature
-composer test:arch     # architecture tests
-composer test:types    # PHPStan / Larastan
-
-# Auto-fix formatting and refactors (Pint, oxlint, oxfmt, Rector)
-composer lint
-```
-
-### Bun scripts
-
-```bash
-bun run build         # production client build
-bun run build:ssr     # client + SSR build
-bun run dev           # Vite dev server
-bun run typecheck     # tsc --noEmit
-bun run lint          # oxlint --fix
-bun run format        # oxfmt
-```
-
-### Artisan helpers
-
-```bash
-php artisan typescript:transform   # generate TS types from app/Data DTOs (App.Data.*)
-php artisan wayfinder:generate     # generate type-safe route helpers (resources/js/wayfinder)
-```
-
 ## Authentication
 
 Authentication is provided by Laravel Fortify and managed from the Settings → Security page:
 
 - Email/password login, registration, password reset, and email verification
 - Two-factor authentication (TOTP) with recovery codes
-- **Passkeys (WebAuthn)** — register platform authenticators (Face ID, Touch ID, Windows Hello, security keys), sign in passwordlessly from the login page, and manage passkeys from settings
+- **Passkeys (WebAuthn)**: register platform authenticators (Face ID, Touch ID, Windows Hello, security keys), sign in passwordlessly from the login page, and manage passkeys from settings
 - Google OAuth via Laravel Socialite
 
 ## Environment Variables
@@ -154,7 +59,7 @@ The project uses **Pest 4**:
 - **Browser tests**: `tests/Browser/` (end-to-end via Playwright/Chromium)
 - **Architecture tests**: `tests/Unit/ArchitecturalTest.php`
 
-Tests run against SQLite (in-memory for feature/unit). Run everything with `composer test`.
+Unit and feature tests run against in-memory SQLite. Run them with `bin/dev test`; see Local development below.
 
 ## Project Structure
 
@@ -200,24 +105,11 @@ Multi-stage `Dockerfile` (PHP 8.5, FrankenPHP) builds three targets and `docker-
 - **Payments** (Cashier): subscriptions, webhooks, multi-currency
 - **Passkeys & 2FA** via Fortify
 
-## Development Tools
-
-- **Bun**: JavaScript runtime / package manager
-- **Laravel Pint**: PHP formatting
-- **Larastan (PHPStan)**: static analysis
-- **Rector**: automated refactoring
-- **oxlint + oxfmt**: TypeScript/React linting and formatting (Oxc toolchain)
-- **TypeScript**: type safety
-
 ## Contributing
 
 - Follow the conventions in `.claude/rules/`
-- Format and lint with `composer lint` (Pint, Rector, oxlint, oxfmt)
-- Ensure `composer test` passes before committing
-
-## License
-
-This project is licensed under the MIT License.
+- Format and lint with `bin/dev composer lint` (Pint, Rector, oxlint, oxfmt)
+- Make sure `bin/dev composer test:types`, `bin/dev composer test:arch` and `bin/dev test` pass before committing
 
 ## Local development
 
@@ -274,3 +166,7 @@ Every git worktree gets its own stack named after its folder, served at `https:/
 The project is mounted read and write, because the containers install dependencies, format code and generate files. Files that run on the Mac outside Docker are mounted read only on top of it: `.git`, `.claude`, `.gemini`, `.github`, `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `.mcp.json`, `.idea`, `bin`, `docker`, `compose.dev.yaml`, `Dockerfile`, `docker-compose.yaml`. Package code running in a container can therefore not plant a git hook or change what `bin/dev` or Compose starts. A new file of that kind needs an entry in `x-project-volumes` in `compose.dev.yaml`, repeated in the services that list their volumes one by one.
 
 Supply chain protection: `bunfig.toml` refuses npm versions younger than seven days, `trustedDependencies` lists the only packages allowed to run install scripts, and Composer's `policy` blocks packages with security advisories or a malware flag.
+
+## License
+
+This project is licensed under the MIT License.

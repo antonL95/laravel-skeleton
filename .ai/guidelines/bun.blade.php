@@ -1,5 +1,5 @@
 <bun-guidelines>
-Bun is the JavaScript runtime and package manager for this project. Always use Bun. Never use npm, npx, yarn, or pnpm.
+Bun is the JavaScript runtime and package manager for this project. Always use Bun. Never use npm, npx, yarn, or pnpm. Bun runs in the stack's `bun` container, so every command below runs as `bin/dev bun ...`; never run Bun on the Mac.
 
 - Install dependencies with `bun install` (the lockfile is `bun.lock`; there is no `package-lock.json`).
 - Add or remove packages with `bun add` / `bun add -d` / `bun remove`.

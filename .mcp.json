@@ -12,19 +12,17 @@
                 "boost:mcp"
             ]
         },
-        "herd": {
-            "command": "php",
-            "args": [
-                "/Applications/Herd.app/Contents/Resources/herd-mcp.phar"
-            ],
-            "env": {
-                "SITE_PATH": "/Users/anton/Developer/laravel-skeleton"
-            }
-        },
         "shadcn": {
-            "command": "npx",
+            "command": "docker",
             "args": [
-                "shadcn@latest",
+                "compose",
+                "run",
+                "--rm",
+                "--no-deps",
+                "-T",
+                "bun",
+                "bunx",
+                "shadcn@4.22.1",
                 "mcp"
             ]
         }

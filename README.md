@@ -244,9 +244,12 @@ The stack serves the application at https://laravel-skeleton.orb.local, Vite at 
 
 | Command | What it does |
 |---------|--------------|
-| `bin/dev up` | Builds the images and starts the stack with secrets from Bitwarden |
-| `bin/dev restart` | Recreates `php`, `queue` with freshly fetched secrets |
-| `bin/dev down` | Stops the stack and keeps the data volumes |
+| `bin/dev up` | Builds the images and starts the stack with secrets from Bitwarden. The queue worker stays off |
+| `bin/dev up --workers` | Also starts the queue worker. It can call outside services and paid APIs, so start it only when you need it |
+| `bin/dev workers:stop` | Stops the queue worker |
+| `bin/dev restart` | Recreates the running app containers (`php`, `queue`) with freshly fetched secrets |
+| `bin/dev down` | Stops the stack and keeps the data volumes. Stacks never start on their own, so after a reboot run `bin/dev up` in the projects you work on |
+| `bin/dev down --others` | Stops every other `bin/dev` stack on this machine, of any project, and leaves this one running |
 | `bin/dev secrets:check` | Lists which of the expected secrets Bitwarden holds, by name only |
 | `bin/dev logs [service]` | Follows the logs |
 | `bin/dev compose ...` | Runs any `docker compose` command against this checkout's stack |

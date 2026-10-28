@@ -52,8 +52,11 @@ usage() {
 Usage: bin/dev <command> [arguments]
 
   up                Build and start the stack with secrets from Bitwarden
+  up --workers      Also start the queue worker
+  workers:stop      Stop the queue worker
   restart           Recreate the app containers with fresh secrets from Bitwarden
   down              Stop the stack (volumes are kept)
+  down --others     Stop every other bin/dev stack on this machine
   compose ...       Run any docker compose command against this checkout's stack
   secrets:check     List which secrets Bitwarden holds for this app (names only)
   logs [service]    Follow logs
@@ -161,7 +164,7 @@ check_env_file() {
 
 remove_stack() {
     local volumes
-    docker compose -p "$1" down --volumes --remove-orphans --timeout 5
+    docker compose -p "$1" --profile '*' down --volumes --remove-orphans --timeout 5
     volumes="$(docker volume ls -q --filter "label=com.docker.compose.project=$1")"
     if [ -n "$volumes" ]; then
         docker volume rm $volumes >/dev/null
@@ -302,6 +305,39 @@ throwaway_app_key() {
     echo "base64:$(head -c 32 /dev/urandom | base64)"
 }
 
+worker_services() {
+    comm -13 <(docker compose config --services 2>/dev/null | sort) <(docker compose --profile workers config --services 2>/dev/null | sort)
+}
+
+running_worker_services() {
+    comm -12 <(worker_services) <(docker compose --profile workers ps --services --status running 2>/dev/null | sort)
+}
+
+restart_services() {
+    local service workers running
+    workers="$(worker_services)"
+    running="$(running_worker_services)"
+    for service in "${secret_services[@]}"; do
+        if ! grep -qx "$service" <<<"$workers" || grep -qx "$service" <<<"$running"; then
+            echo "$service"
+        fi
+    done
+}
+
+stop_other_stacks() {
+    local name containers
+    command -v jq >/dev/null 2>&1 || fail "jq is not installed."
+
+    for name in $(docker compose ls --format json | jq -r '.[] | select(.ConfigFiles | split(",") | any(endswith("/compose.dev.yaml"))) | .Name'); do
+        [ "$name" != "$COMPOSE_PROJECT_NAME" ] || continue
+        containers="$(docker ps -q --filter "label=com.docker.compose.project=$name")"
+        if [ -n "$containers" ]; then
+            docker stop $containers >/dev/null
+            echo "Stopped $name"
+        fi
+    done
+}
+
 compose_exec() {
     docker compose exec ${no_tty[@]+"${no_tty[@]}"} "$@"
 }
@@ -321,13 +357,26 @@ esac
 
 case "$subcommand" in
     up)
+        if [ "${1:-}" = "--workers" ]; then
+            shift
+            export COMPOSE_PROFILES=workers
+        fi
         with_secrets docker compose up -d --build "$@"
         ;;
+    workers:stop)
+        services="$(worker_services)"
+        [ -n "$services" ] || fail "this stack has no workers."
+        docker compose --profile workers stop $services
+        ;;
     restart)
-        with_secrets docker compose up -d --build --force-recreate "${secret_services[@]}" "$@"
+        with_secrets docker compose up -d --build --force-recreate $(restart_services) "$@"
         ;;
     down)
-        docker compose down "$@"
+        if [ "${1:-}" = "--others" ]; then
+            stop_other_stacks
+        else
+            docker compose --profile '*' down "$@"
+        fi
         ;;
     logs)
         docker compose logs -f "$@"

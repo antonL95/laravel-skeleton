@@ -22,7 +22,7 @@ changed_since_last_run() {
 generate
 touch "$ready"
 
-while sleep 1; do
+while sleep 2; do
     if changed_since_last_run; then
         generate
     fi

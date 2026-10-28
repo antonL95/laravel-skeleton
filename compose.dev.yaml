@@ -40,7 +40,6 @@ x-php-app: &php-app
   volumes: *project-volumes
   environment:
     <<: [*app-secrets, *dev-php-env]
-  restart: unless-stopped
 
 services:
   php:
@@ -67,7 +66,8 @@ services:
 
   queue:
     <<: *php-app
-    command: ['php', 'artisan', 'queue:listen', '--tries=1', '--timeout=0']
+    profiles: ['workers']
+    command: ['bash', 'docker/dev/queue.sh', '--tries=1', '--timeout=0']
     healthcheck:
       test: ['CMD', 'healthcheck-queue']
       interval: 30s
@@ -84,7 +84,6 @@ services:
     healthcheck:
       test: ['CMD', 'healthcheck-reverb']
       interval: 30s
-    restart: unless-stopped
 
   codegen:
     <<: [*php-image, *hardening]
@@ -97,7 +96,6 @@ services:
       interval: 2s
       timeout: 2s
       retries: 90
-    restart: unless-stopped
 
   bun:
     image: oven/bun:1.4.3-alpine
@@ -132,14 +130,11 @@ services:
     depends_on:
       codegen:
         condition: service_healthy
-    restart: unless-stopped
 
   tools:
     build:
       context: docker/dev
-      additional_contexts:
-        base: service:php
-    image: laravel-skeleton-dev-tools
+    image: devstack-tools:1
     command: ['bash', 'docker/dev/with-orbstack-ca.sh', 'sleep', 'infinity']
     init: true
     healthcheck:
@@ -176,7 +171,6 @@ services:
 
   mailpit:
     image: axllent/mailpit:v1.31.6
-    restart: unless-stopped
 
 volumes:
   node_modules:

@@ -40,6 +40,9 @@ x-php-app: &php-app
   volumes: *project-volumes
   environment:
     <<: [*app-secrets, *dev-php-env]
+  depends_on:
+    pgsql:
+      condition: service_healthy
 
 services:
   php:
@@ -163,12 +166,32 @@ services:
       - rector-cache:/tmp/rector_cached_files
       - phpstan-cache:/tmp/phpstan
     environment:
+      DB_HOST: pgsql
       DEV_VITE_CONTAINER: '1'
       SHOW_WELCOME_MESSAGE: 'false'
       PHP_MEMORY_LIMIT: '-1'
       APP_SERVICES_CACHE: /tmp/laravel-services.php
       COMPOSER_PROCESS_TIMEOUT: '0'
     <<: *hardening
+    depends_on:
+      pgsql:
+        condition: service_healthy
+
+  pgsql:
+    image: pgvector/pgvector:0.8.7-pg18-trixie
+    command: ['postgres', '-c', 'max_wal_size=256MB', '-c', 'min_wal_size=32MB', '-c', 'max_locks_per_transaction=256']
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_DB: laravel
+      POSTGRES_HOST_AUTH_METHOD: trust
+    volumes:
+      - pgsql-data:/var/lib/postgresql
+      - ./docker/dev/postgres/initdb.sql:/docker-entrypoint-initdb.d/initdb.sql:ro
+    healthcheck:
+      test: ['CMD', 'pg_isready', '-U', 'root', '-d', 'laravel']
+      interval: 2s
+      timeout: 3s
+      retries: 30
 
   mailpit:
     image: axllent/mailpit:v1.31.6
@@ -181,3 +204,4 @@ volumes:
   pest-cache:
   rector-cache:
   phpstan-cache:
+  pgsql-data:

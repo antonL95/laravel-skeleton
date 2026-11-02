@@ -13,15 +13,25 @@ declare(strict_types=1);
 |
 */
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\WithCachedConfig;
+use Illuminate\Foundation\Testing\WithCachedRoutes;
 use Saloon\Config;
 use Tests\TestCase;
 
-pest()->extend(TestCase::class)
-    ->use(RefreshDatabase::class)
-    ->in('Feature');
+use function Pest\Laravel\withoutVite;
+
+pest()->tia()->locally();
 
 pest()->extend(TestCase::class)
-    ->use(RefreshDatabase::class)
+    ->use(RefreshDatabase::class, WithCachedConfig::class, WithCachedRoutes::class)
+    ->in('Feature');
+
+pest()->beforeEach(function (): void {
+    withoutVite();
+})->in('Feature');
+
+pest()->extend(TestCase::class)
+    ->use(RefreshDatabase::class, WithCachedConfig::class, WithCachedRoutes::class)
     ->in('Browser');
 
 Config::preventStrayRequests();

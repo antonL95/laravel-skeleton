@@ -48,3 +48,12 @@ description: Global project conventions, structure, and communication guidelines
 ## Rector
 
 - Run `composer refactor` before finalizing changes to ensure your code matches the project's expected refactoring.
+
+### Database
+
+Tests run on PostgreSQL 18, the same engine as production. Local runs use the `laravel_test` database in the stack's `pgsql` container; the container's init script creates it with the four parallel worker databases, and `bin/dev composer db:test` recreates them on a stack whose volume already existed. CI runs a `pgvector/pgvector:pg18` service. `Tests\Support\TestDatabaseGuard` refuses any database whose name does not end in `_test` or `_test_test_<worker>`.
+
+`RefreshDatabase` loads `database/schema/pgsql-schema.sql` once per worker. After adding a migration, run it against the test database and regenerate the dump: `bin/dev tools env APP_ENV=testing php artisan migrate --force`, then `bin/dev tools env APP_ENV=testing php artisan schema:dump`. A dump holds no rows, so a test that needs data seeds it itself; rows inserted by a data migration do not reach the tests.
+
+Every script that touches the test database goes through `scripts/with-test-lock.sh`, which allows one run at a time per stack.
+

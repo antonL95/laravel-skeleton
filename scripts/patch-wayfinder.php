@@ -2,45 +2,37 @@
 
 declare(strict_types=1);
 
-/*
- * Patch wayfinder's multi-route TypeScript generator.
- *
- * Upstream wayfinder (vendor/laravel/wayfinder) emits a keyed object when a
- * controller is bound to more than one route (e.g. a web route + an api/v1
- * route for the same invokable controller). This breaks every frontend call
- * site that uses the controller as a callable (Controller(uuid).url, ...).
- *
- * This patch rewrites multiRouteControllerMethod() to export a single callable
- * (the non-api route when available, otherwise the first route). Runs on every
- * composer post-autoload-dump so it survives composer install/update. Idempotent
- * (keyed on the SKELETON_WAYFINDER_PATCH marker).
- */
-
 $target = __DIR__.'/../vendor/laravel/wayfinder/src/Langs/TypeScript/Converters/RouteMethod.php';
 
 if (!is_file($target)) {
     exit(0);
 }
 
-$marker = 'SKELETON_WAYFINDER_PATCH_V1';
 $contents = (string) file_get_contents($target);
-
-if (str_contains($contents, $marker)) {
-    exit(0);
-}
+$routeMethodPatched = str_contains($contents, 'relatedRoutes: [$primary],');
 
 $search = <<<'PHP'
     protected function multiRouteControllerMethod(): string
     {
         $output = [];
 
-        foreach ($this->relatedRoutes as $route) {
+        $duplicateUris = collect($this->relatedRoutes)->duplicates(fn (Route $route) => $route->uri());
+
+        $keys = array_map(
+            fn (Route $route) => $duplicateUris->contains($route->uri())
+                ? $this->verbPrefixedUri($route)
+                : $route->uri(),
+            $this->relatedRoutes,
+        );
+
+        foreach ($this->relatedRoutes as $index => $route) {
             $routeMethod = new static(
                 route: $route,
                 withForm: $this->withForm,
                 withInertiaComponent: $this->withInertiaComponent,
                 named: $this->named,
                 tmpMethod: true,
+                tmpMethodKey: $keys[$index],
             );
 
             $output[] = $routeMethod->controllerMethod();
@@ -48,8 +40,8 @@ $search = <<<'PHP'
 
         $object = TypeScript::object();
 
-        foreach ($this->relatedRoutes as $route) {
-            $object->key($route->uri())->value($this->tmpMethod($route));
+        foreach ($this->relatedRoutes as $index => $route) {
+            $object->key($keys[$index])->value($this->tmpMethod($route, $keys[$index]));
         }
 
         $const = TypeScript::constant($this->name, $object)->export($this->named || ! $this->route->hasInvokableController());
@@ -61,9 +53,6 @@ $search = <<<'PHP'
 PHP;
 
 $replace = <<<'PHP'
-    // SKELETON_WAYFINDER_PATCH_V1: export a single callable when a controller
-    // is bound to multiple routes (web + api/v1). Without this, frontend code
-    // using Controller(arg).url fails with "not callable".
     protected function multiRouteControllerMethod(): string
     {
         $primary = null;
@@ -93,12 +82,62 @@ $replace = <<<'PHP'
     }
 PHP;
 
-if (!str_contains($contents, $search)) {
+if (!$routeMethodPatched && !str_contains($contents, $search)) {
     fwrite(STDERR, "[patch-wayfinder] upstream multiRouteControllerMethod no longer matches expected shape; patch skipped.\n");
+} elseif (!$routeMethodPatched) {
+    $patched = str_replace($search, $replace, $contents);
+    file_put_contents($target, $patched);
+    fwrite(STDOUT, "[patch-wayfinder] RouteMethod patch applied.\n");
+}
+
+$runtimeTarget = __DIR__.'/../vendor/laravel/wayfinder/resources/js/wayfinder.ts';
+$runtimeContents = is_file($runtimeTarget) ? (string) file_get_contents($runtimeTarget) : '';
+$runtimeSearch = 'type Method = "get" | "post" | "put" | "delete" | "patch" | "head" | "options";';
+$runtimeReplace = 'type Method = "get" | "post" | "put" | "delete" | "patch" | "head" | "options" | "query";';
+
+if ($runtimeContents !== '' && !str_contains($runtimeContents, '| "query"') && !str_contains($runtimeContents, $runtimeSearch)) {
+    fwrite(STDERR, "[patch-wayfinder] upstream runtime Method type no longer matches expected shape; query patch skipped.\n");
+} elseif ($runtimeContents !== '' && !str_contains($runtimeContents, '| "query"')) {
+    file_put_contents($runtimeTarget, str_replace($runtimeSearch, $runtimeReplace, $runtimeContents));
+    fwrite(STDOUT, "[patch-wayfinder] runtime Method query patch applied.\n");
+}
+
+$broadcastTarget = __DIR__.'/../vendor/laravel/wayfinder/src/Converters/BroadcastEvents.php';
+
+if (!is_file($broadcastTarget)) {
     exit(0);
 }
 
-$patched = str_replace($search, $replace, $contents);
-file_put_contents($target, $patched);
+$broadcastMarker = 'TENSEN_WAYFINDER_PATCH_V1_ECHO';
+$broadcastContents = (string) file_get_contents($broadcastTarget);
 
-fwrite(STDOUT, "[patch-wayfinder] applied.\n");
+if (str_contains($broadcastContents, $broadcastMarker)) {
+    exit(0);
+}
+
+$broadcastSearch = <<<'PHP'
+        return implode(PHP_EOL, $content).PHP_EOL.TypeScript::module(
+            $echoPackage,
+            TypeScript::interface('Events', $eventsInterface->implode(PHP_EOL))
+        );
+PHP;
+
+$broadcastReplace = <<<'PHP'
+        // TENSEN_WAYFINDER_PATCH_V1_ECHO: append `export {};` so the .d.ts is a
+        // module file and `declare module '@laravel/echo-react'` augments the
+        // real type instead of replacing it.
+        return implode(PHP_EOL, $content).PHP_EOL.TypeScript::module(
+            $echoPackage,
+            TypeScript::interface('Events', $eventsInterface->implode(PHP_EOL))
+        ).PHP_EOL.PHP_EOL.'export {};';
+PHP;
+
+if (!str_contains($broadcastContents, $broadcastSearch)) {
+    fwrite(STDERR, "[patch-wayfinder] upstream echoFileContent no longer matches expected shape; echo patch skipped.\n");
+    exit(0);
+}
+
+$broadcastPatched = str_replace($broadcastSearch, $broadcastReplace, $broadcastContents);
+file_put_contents($broadcastTarget, $broadcastPatched);
+
+fwrite(STDOUT, "[patch-wayfinder] BroadcastEvents patch applied.\n");

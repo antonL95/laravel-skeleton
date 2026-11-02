@@ -11,6 +11,15 @@ USER root
 RUN install-php-extensions intl bcmath gd gmp
 USER www-data
 
+FROM web-base AS dev
+USER root
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends postgresql-common \
+ && /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y \
+ && apt-get install -y --no-install-recommends postgresql-client-18 \
+ && rm -rf /var/lib/apt/lists/*
+USER www-data
+
 # vendor: composer deps cached on composer.lock, then full source + scripts
 FROM worker-base AS vendor
 COPY --chown=www-data:www-data composer.json composer.lock /var/www/html/

@@ -2,7 +2,7 @@ x-php-image: &php-image
   build:
     context: .
     dockerfile: Dockerfile
-    target: web-base
+    target: dev
   image: laravel-skeleton-dev-php
 
 x-hardening: &hardening

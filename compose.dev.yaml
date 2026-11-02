@@ -140,6 +140,7 @@ services:
     healthcheck:
       disable: true
     volumes:
+      - ./docker/dev/pcov.ini:/usr/local/etc/php/conf.d/zz-pcov.ini:ro
       - *project
       - *ro-git
       - *ro-claude

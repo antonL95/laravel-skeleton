@@ -53,5 +53,10 @@ export default defineConfig(({ mode }) => ({
         tailwindcss(),
         ...phpCodegenPlugins,
     ],
-    server: devContainerServer(mode),
+    server: {
+        ...devContainerServer(mode),
+        watch: {
+            ignored: ['**/vendor/**', '**/storage/**'],
+        },
+    },
 }));

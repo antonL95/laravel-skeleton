@@ -342,6 +342,27 @@ compose_exec() {
     docker compose exec ${no_tty[@]+"${no_tty[@]}"} "$@"
 }
 
+reap_orphaned_browsers() {
+    docker compose exec -T tools bash -c '
+        signal_orphans() {
+            ps -axo pid=,ppid=,args= | while read -r pid ppid args; do
+                [ "$ppid" = "1" ] || continue
+                case "$args" in
+                    *"playwright run-server"* | *chrome-headless-shell*)
+                        kill "-$1" "$pid" 2>/dev/null
+                        echo "$pid"
+                        ;;
+                esac
+            done
+        }
+        stopped="$(signal_orphans TERM)"
+        [ -n "$stopped" ] || exit 0
+        echo "Stopped orphaned test browser processes:" $stopped >&2
+        sleep 1
+        signal_orphans KILL >/dev/null
+    ' || true
+}
+
 [ "$#" -gt 0 ] || { usage; exit 1; }
 
 subcommand="$1"
@@ -394,7 +415,10 @@ case "$subcommand" in
         compose_exec "$app_service" bash "$@"
         ;;
     test)
-        compose_exec -e "APP_KEY=$(throwaway_app_key)" tools composer "$test_script" -- "$@"
+        status=0
+        compose_exec -e "APP_KEY=$(throwaway_app_key)" tools composer "$test_script" -- "$@" || status=$?
+        reap_orphaned_browsers
+        exit "$status"
         ;;
     test:browser)
         [ -n "$browser_script" ] || fail "this app has no browser tests."
@@ -402,11 +426,15 @@ case "$subcommand" in
         docker compose run --rm --no-deps bun bun run build
         status=0
         compose_exec -e "APP_KEY=$(throwaway_app_key)" tools composer "$browser_script" -- "$@" || status=$?
+        reap_orphaned_browsers
         docker compose start bun
         exit "$status"
         ;;
     tools)
-        compose_exec -e "APP_KEY=$(throwaway_app_key)" tools "$@"
+        status=0
+        compose_exec -e "APP_KEY=$(throwaway_app_key)" tools "$@" || status=$?
+        reap_orphaned_browsers
+        exit "$status"
         ;;
     composer)
         if [ -n "$composer_secrets" ]; then

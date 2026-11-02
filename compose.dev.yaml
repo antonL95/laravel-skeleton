@@ -98,7 +98,7 @@ services:
       retries: 90
 
   bun:
-    image: oven/bun:1.4.3-alpine
+    image: oven/bun:1.4.4-alpine
     working_dir: /var/www/html
     command: ['bun', '--bun', 'run', 'dev']
     environment:
@@ -134,7 +134,7 @@ services:
   tools:
     build:
       context: docker/dev
-    image: devstack-tools:2
+    image: devstack-tools:4
     command: ['bash', 'docker/dev/with-orbstack-ca.sh', 'sleep', 'infinity']
     init: true
     healthcheck:

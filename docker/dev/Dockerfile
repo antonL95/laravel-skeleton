@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM oven/bun:1.4.3-debian AS bun-source
+FROM oven/bun:1.4.4-debian AS bun-source
 
 FROM serversideup/php:8.5-frankenphp-v5.0.5
 USER root
@@ -12,6 +12,7 @@ RUN apt-get update \
  && apt-get install -y --no-install-recommends postgresql-client-18 \
  && rm -rf /var/lib/apt/lists/*
 COPY --from=bun-source /usr/local/bin/bun /usr/local/bin/bun
+COPY --from=composer:2.11.0 /usr/bin/composer /usr/bin/composer
 RUN ln -s bun /usr/local/bin/bunx \
  && ln -s bun /usr/local/bin/node
 RUN bunx playwright@${PLAYWRIGHT_VERSION} install --with-deps chromium \

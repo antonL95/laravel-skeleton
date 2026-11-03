@@ -29,3 +29,15 @@ paths:
 
 - Use `Saloon::fake([])` to mock HTTP requests.
 - When testing a request, use `Saloon::fake([RequestToTest::class => MockResponse::make(...)])`. Always use associative arrays to map requests to responses.
+
+## PostgreSQL Habits
+
+Tests run on PostgreSQL, which rejects what SQLite used to let through.
+
+- Never assert a literal id. Sequences are not rolled back with the transaction; assert on the created model's id.
+- When asserting order, make the query order deterministic with a secondary `orderBy('id')`, or sort in the test.
+- Pass booleans as `true`/`false`, never `1`/`0`, and integers as integers.
+- A `date` column compared to a Carbon timestamp compares by date, so the boundary day is included.
+- String length limits are enforced. A value longer than a `varchar(n)` column fails the insert.
+- Use the query builder or `whereLike` instead of raw SQL with MySQL backticks or case sensitive `like`.
+- `Embeddings::fake()` runs for every feature and browser test in `tests/Pest.php`. Override it in a test when the vectors matter.

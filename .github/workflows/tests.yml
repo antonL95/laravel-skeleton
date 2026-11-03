@@ -1,9 +1,17 @@
 name: Test application
 
 on:
-  push:
-    branches: [main]
   pull_request:
+    paths-ignore:
+      - '*.md'
+      - 'docs/**'
+      - '.agents/**'
+      - '.claude/**'
+      - '.codex/**'
+      - '.gemini/**'
+  schedule:
+    - cron: '45 3 * * *'
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -13,41 +21,39 @@ permissions:
   contents: read
 
 jobs:
-  lint:
-    runs-on: ubuntu-latest
+  static:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup PHP
-        uses: shivammathur/setup-php@v2
+        uses: ./.github/actions/setup-php
         with:
           php-version: 8.5
-          tools: composer:v2
-          coverage: none
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
 
       - name: Cache Composer dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: vendor
           key: composer-${{ hashFiles('composer.lock') }}
           restore-keys: composer-
 
       - name: Cache Bun dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: node_modules
-          key: bun-${{ hashFiles('bun.lock') }}
-          restore-keys: bun-
+          key: bun-v2-${{ hashFiles('bun.lock') }}
+
+      - name: Validate Composer Files
+        run: composer validate --strict
 
       - name: Copy Environment File
         run: cp .env.testing .env
-
-      - name: Create SQLite Database
-        run: touch database/testing.sqlite
 
       - name: Composer install
         run: composer install -q --no-interaction --prefer-dist --optimize-autoloader
@@ -58,159 +64,69 @@ jobs:
       - name: Generate Types
         run: php artisan wayfinder:generate && php artisan typescript:transform
 
+      - name: Cache Static Analysis Results
+        uses: actions/cache@v6
+        with:
+          path: |
+            /tmp/phpstan
+            /tmp/rector_cached_files
+          key: static-analysis-${{ github.sha }}
+          restore-keys: static-analysis-
+
+      - name: Cache Pint Results
+        uses: actions/cache@v6
+        with:
+          path: storage/framework/cache/pint.cache
+          key: pint-php-8.5-${{ hashFiles('composer.lock', 'pint.json') }}-${{ github.sha }}
+          restore-keys: pint-php-8.5-${{ hashFiles('composer.lock', 'pint.json') }}-
+
       - name: Lint
         run: composer test:lint
 
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: 8.5
-          tools: composer:v2
-          coverage: none
-
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-
-      - name: Cache Composer dependencies
-        uses: actions/cache@v4
-        with:
-          path: vendor
-          key: composer-${{ hashFiles('composer.lock') }}
-          restore-keys: composer-
-
-      - name: Cache Bun dependencies
-        uses: actions/cache@v4
-        with:
-          path: node_modules
-          key: bun-${{ hashFiles('bun.lock') }}
-          restore-keys: bun-
-
-      - name: Copy Environment File
-        run: cp .env.testing .env
-
-      - name: Create SQLite Database
-        run: touch database/testing.sqlite
-
-      - name: Composer install
-        run: composer install -q --no-interaction --prefer-dist --optimize-autoloader
-
-      - name: Install Node Dependencies
-        run: bun install --frozen-lockfile
-
-      - name: Build Frontend
-        run: bun run build:ssr
-
-  types:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: 8.5
-          tools: composer:v2
-          coverage: none
-
-      - name: Cache Composer dependencies
-        uses: actions/cache@v4
-        with:
-          path: vendor
-          key: composer-${{ hashFiles('composer.lock') }}
-          restore-keys: composer-
-
-      - name: Copy Environment File
-        run: cp .env.testing .env
-
-      - name: Create SQLite Database
-        run: touch database/testing.sqlite
-
-      - name: Composer install
-        run: composer install -q --no-interaction --prefer-dist --optimize-autoloader
-
-      - name: Run Migrations
-        run: php artisan migrate --force
-
       - name: Types
+        if: ${{ !cancelled() }}
         run: composer test:types
 
-  arch:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: 8.5
-          tools: composer:v2
-          coverage: none
-
-      - name: Cache Composer dependencies
-        uses: actions/cache@v4
-        with:
-          path: vendor
-          key: composer-${{ hashFiles('composer.lock') }}
-          restore-keys: composer-
-
-      - name: Copy Environment File
-        run: cp .env.testing .env
-
-      - name: Create SQLite Database
-        run: touch database/testing.sqlite
-
-      - name: Composer install
-        run: composer install -q --no-interaction --prefer-dist --optimize-autoloader
-
-      - name: Run Migrations
-        run: php artisan migrate --force
-
       - name: Architecture
+        if: ${{ !cancelled() }}
         run: composer test:arch
 
   tests:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: pgvector/pgvector:pg18
+        env:
+          POSTGRES_USER: root
+          POSTGRES_DB: laravel_test
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U root -d laravel_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup PHP
-        uses: shivammathur/setup-php@v2
+        uses: ./.github/actions/setup-php
         with:
           php-version: 8.5
-          tools: composer:v2
-          coverage: none
-
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+          cli-opcache: 'true'
 
       - name: Cache Composer dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: vendor
           key: composer-${{ hashFiles('composer.lock') }}
           restore-keys: composer-
 
-      - name: Cache Bun dependencies
-        uses: actions/cache@v4
-        with:
-          path: node_modules
-          key: bun-${{ hashFiles('bun.lock') }}
-          restore-keys: bun-
-
       - name: Copy Environment File
         run: cp .env.testing .env
-
-      - name: Create SQLite Database
-        run: touch database/testing.sqlite
 
       - name: Composer install
         run: composer install -q --no-interaction --prefer-dist --optimize-autoloader
@@ -218,59 +134,63 @@ jobs:
       - name: Generate Application Key
         run: php artisan key:generate
 
-      - name: Install Node Dependencies
-        run: bun install --frozen-lockfile
+      - name: Unit and Feature Tests
+        run: composer test:unit -- --ci --log-junit=storage/logs/junit-unit-feature.xml ${{ github.event_name == 'schedule' && '--order-by=random' || '' }}
 
-      - name: Run Migrations
-        run: php artisan migrate --force
-
-      - name: Build Assets
-        run: bun run build
-
-      - name: Unit Tests
-        run: php ./vendor/bin/pest --parallel tests/Unit
-
-      - name: Feature Tests
-        run: php ./vendor/bin/pest --parallel tests/Feature
+      - name: Upload Unit and Feature Results
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: junit-unit-feature-attempt-${{ github.run_attempt }}
+          path: storage/logs/junit-unit-feature.xml
+          if-no-files-found: ignore
+          retention-days: 30
 
   browser-tests:
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        shard: [1, 2, 3, 4]
-    name: browser-tests (shard ${{ matrix.shard }}/4)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: pgvector/pgvector:pg18
+        env:
+          POSTGRES_USER: root
+          POSTGRES_DB: laravel_test
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U root -d laravel_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup PHP
-        uses: shivammathur/setup-php@v2
+        uses: ./.github/actions/setup-php
         with:
           php-version: 8.5
-          tools: composer:v2
-          coverage: none
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
 
       - name: Cache Composer dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: vendor
           key: composer-${{ hashFiles('composer.lock') }}
           restore-keys: composer-
 
       - name: Cache Bun dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: node_modules
-          key: bun-${{ hashFiles('bun.lock') }}
-          restore-keys: bun-
+          key: bun-v2-${{ hashFiles('bun.lock') }}
 
       - name: Cache Playwright browsers
         id: playwright-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ hashFiles('bun.lock') }}
@@ -278,9 +198,6 @@ jobs:
 
       - name: Copy Environment File
         run: cp .env.testing .env
-
-      - name: Create SQLite Database
-        run: touch database/testing.sqlite
 
       - name: Composer install
         run: composer install -q --no-interaction --prefer-dist --optimize-autoloader
@@ -303,16 +220,34 @@ jobs:
         run: php artisan migrate --force
 
       - name: Build Assets
-        run: bun run build
+        run: bun run build:ssr
 
-      - name: Browser Tests (shard ${{ matrix.shard }}/4)
-        run: php ./vendor/bin/pest --testsuite=Browser --shard=${{ matrix.shard }}/4
+      - name: Browser Tests
+        run: composer test:browser -- --ci --trace --log-junit=storage/logs/junit-browser.xml
+
+      - name: Upload Browser Results
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: junit-browser-attempt-${{ github.run_attempt }}
+          path: storage/logs/junit-browser.xml
+          if-no-files-found: ignore
+          retention-days: 30
 
       - name: Upload Failure Screenshots
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
-          name: browser-screenshots-shard-${{ matrix.shard }}
+          name: browser-screenshots-attempt-${{ github.run_attempt }}
           path: tests/Browser/Screenshots
           if-no-files-found: ignore
-          retention-days: 7
+          retention-days: 30
+
+      - name: Upload Failure Traces
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: browser-traces-attempt-${{ github.run_attempt }}
+          path: tests/Browser/Traces
+          if-no-files-found: ignore
+          retention-days: 30

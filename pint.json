@@ -1,5 +1,6 @@
 {
     "preset": "laravel",
+    "cache-file": "storage/framework/cache/pint.cache",
     "notPath": [
         "public/frankenphp-worker.php"
     ],

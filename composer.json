@@ -96,10 +96,16 @@
         "test:types": "phpstan analyse",
         "test:arch": "pest tests/Unit/ArchitecturalTest.php",
         "test:type-cov": "pest --type-coverage --min=100",
-        "test:unit-cov": "php ./vendor/bin/pest --parallel --coverage",
-        "test:unit": "php ./vendor/bin/pest --parallel",
+        "test:unit-cov": "bash scripts/with-test-lock.sh php ./vendor/bin/pest --parallel --coverage",
+        "test:unit-local": [
+            "Composer\\Config::disableProcessTimeout",
+            "XDEBUG_MODE=coverage bash scripts/with-test-lock.sh php ./vendor/bin/pest --parallel --processes=4"
+        ],
+        "db:test": "bash scripts/create-test-database.sh",
+        "test:browser": "bash scripts/with-test-lock.sh php ./vendor/bin/pest --configuration=phpunit.browser.xml --no-tia",
+        "test:unit": "bash scripts/with-test-lock.sh php ./vendor/bin/pest --parallel",
         "test:lint": [
-            "pint --test",
+            "pint --test --parallel --max-processes=2",
             "bun run format:check",
             "bun run lint:check",
             "bun run typecheck",
@@ -115,7 +121,8 @@
             "@test:lint",
             "@test:types",
             "@test:arch",
-            "@test:unit"
+            "@test:unit",
+            "@test:browser"
         ]
     },
     "extra": {

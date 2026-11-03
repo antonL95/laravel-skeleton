@@ -59,7 +59,7 @@ The project uses **Pest 4**:
 - **Browser tests**: `tests/Browser/` (end-to-end via Playwright/Chromium)
 - **Architecture tests**: `tests/Unit/ArchitecturalTest.php`
 
-Unit and feature tests run against in-memory SQLite. Run them with `bin/dev test`; see Local development below.
+Unit, feature and browser tests run against PostgreSQL in the `pgsql` container, in the `laravel_test` database. Run them with `bin/dev test`; see Local development below.
 
 ## Project Structure
 
@@ -148,7 +148,7 @@ The stack serves the application at https://laravel-skeleton.orb.local, Vite at 
 | `bin/dev artisan ...` | Runs Artisan in the `php` container |
 | `bin/dev tinker` | Opens Tinker in the `php` container |
 | `bin/dev shell` | Opens bash in the `php` container |
-| `bin/dev test` | Runs `composer test:unit` in the `tools` container |
+| `bin/dev test` | Runs `composer test:unit-local` in the `tools` container |
 | `bin/dev composer ...` | Runs Composer in a one off `tools` container with a random throwaway `APP_KEY`, for example `bin/dev composer lint` |
 | `bin/dev bun ...` | Runs Bun in a one off `bun` container, for example `bin/dev bun add <package>` |
 | `bin/dev tools ...` | Runs a command in the `tools` container with a random throwaway `APP_KEY` |

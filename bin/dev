@@ -11,8 +11,8 @@ main_stack_name="laravel-skeleton"
 shared_composer_cache="$main_stack_name-composer-cache"
 app_service="php"
 secret_services=(php queue)
-test_script="test:unit"
-browser_script=""
+test_script="test:unit-local"
+browser_script="test:browser"
 composer_secrets=""
 
 fail() {

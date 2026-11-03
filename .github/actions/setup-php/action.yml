@@ -1,0 +1,38 @@
+name: Setup PHP
+description: Install the prebuilt PHP build from shivammathur/php-ubuntu without Xdebug or PCOV
+
+inputs:
+  php-version:
+    description: PHP minor version to install
+    required: true
+
+  cli-opcache:
+    description: Enable OPcache for CLI processes
+    required: false
+    default: 'false'
+
+runs:
+  using: composite
+  steps:
+    - name: Install PHP ${{ inputs.php-version }}
+      shell: bash
+      run: |
+        curl -fsSL https://github.com/shivammathur/php-ubuntu/releases/latest/download/install.sh -o /tmp/php-install.sh
+        sudo bash /tmp/php-install.sh "${{ inputs.php-version }}" > /tmp/php-install.log 2>&1 || { tail -50 /tmp/php-install.log; exit 1; }
+        sudo rm -f /etc/php/${{ inputs.php-version }}/*/conf.d/*xdebug*.ini /etc/php/${{ inputs.php-version }}/*/conf.d/*pcov*.ini
+        sudo composer self-update 2.11.0 --quiet
+        php --version
+        composer --version
+
+    - name: Enable CLI OPcache
+      if: inputs.cli-opcache == 'true'
+      shell: bash
+      run: |
+        sudo tee /etc/php/${{ inputs.php-version }}/cli/conf.d/99-opcache-cli.ini > /dev/null <<'INI'
+        opcache.enable_cli=1
+        opcache.memory_consumption=256
+        opcache.max_accelerated_files=30000
+        opcache.interned_strings_buffer=32
+        opcache.jit=disable
+        INI
+        php -i | grep -E 'opcache.(enable_cli|memory_consumption|max_accelerated_files|jit)'

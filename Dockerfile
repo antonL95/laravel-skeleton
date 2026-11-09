@@ -1,12 +1,12 @@
 # syntax=docker/dockerfile:1
 FROM oven/bun:1 AS bun-source
 
-FROM serversideup/php:8.5-cli-v5.0.5 AS worker-base
+FROM serversideup/php:8.5-cli-v5.1.1 AS worker-base
 USER root
 RUN install-php-extensions intl bcmath gd gmp
 USER www-data
 
-FROM serversideup/php:8.5-frankenphp-v5.0.5 AS web-base
+FROM serversideup/php:8.5-frankenphp-v5.1.1 AS web-base
 USER root
 RUN install-php-extensions intl bcmath gd gmp
 USER www-data

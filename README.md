@@ -122,11 +122,11 @@ The local stack runs in Docker on OrbStack. No PHP, Composer, Bun or Node runs o
 3. Create `.dev.local` in the project root (it is gitignored) with the id of the Bitwarden project that holds the dev secrets: `echo 'BWS_PROJECT_ID=<project id>' > .dev.local`.
 4. The Bitwarden project is shared by several applications, so this application's secrets carry the `LARAVEL_SKELETON_` prefix, which `bin/dev` removes before the stack starts: `LARAVEL_SKELETON_APP_KEY`.
 5. Copy `.env.example` to `.env`. It holds only non secret configuration.
-6. Start the stack and install the dependencies:
+6. Install the dependencies and start the stack:
    ```bash
-   bin/dev up
    bin/dev composer install
    bin/dev bun install
+   bin/dev up
    bin/dev artisan migrate
    ```
 

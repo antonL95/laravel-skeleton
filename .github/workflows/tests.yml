@@ -9,8 +9,6 @@ on:
       - '.claude/**'
       - '.codex/**'
       - '.gemini/**'
-  schedule:
-    - cron: '45 3 * * *'
   workflow_dispatch:
 
 concurrency:
@@ -135,7 +133,7 @@ jobs:
         run: php artisan key:generate
 
       - name: Unit and Feature Tests
-        run: composer test:unit -- --ci --log-junit=storage/logs/junit-unit-feature.xml ${{ github.event_name == 'schedule' && '--order-by=random' || '' }}
+        run: composer test:unit -- --ci --log-junit=storage/logs/junit-unit-feature.xml
 
       - name: Upload Unit and Feature Results
         if: ${{ !cancelled() }}

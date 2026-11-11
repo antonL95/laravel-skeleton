@@ -193,9 +193,9 @@ init_worktree() {
 
     cat <<DONE
 Prepared stack $COMPOSE_PROJECT_NAME at https://$COMPOSE_PROJECT_NAME.orb.local. Next:
-  bin/dev up
   bin/dev composer install
   bin/dev bun install
+  bin/dev up
   bin/dev artisan migrate
 DONE
 }

@@ -3,7 +3,7 @@ FROM oven/bun:1.4.4-debian AS bun-source
 
 FROM serversideup/php:8.5-frankenphp-v5.2.1
 USER root
-ARG PLAYWRIGHT_VERSION=1.64.1
+ARG PLAYWRIGHT_VERSION=1.65.1
 ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
 RUN install-php-extensions intl bcmath gd gmp pcov sockets
 RUN apt-get update \

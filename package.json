@@ -16,7 +16,7 @@
         "@laravel/vite-plugin-wayfinder": "^0.1.11",
         "@types/node": "^26.6.6",
         "laravel-echo": "^2.6.3",
-        "oxfmt": "^0.74.0",
+        "oxfmt": "^0.78.0",
         "oxlint": "^1.93.0",
         "pusher-js": "^8.6.0",
         "vite-plugin-run": "^0.9.1"

@@ -1,13 +1,11 @@
 {
     "agents": [
-        "gemini",
-        "opencode"
+        "opencode",
+        "claude_code",
+        "codex",
+        "antigravity"
     ],
     "cloud": false,
-    "editors": [
-        "claude_code",
-        "gemini",
-        "opencode"
-    ],
-    "guidelines": true
+    "guidelines": true,
+    "mcp": true
 }

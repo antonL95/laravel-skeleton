@@ -163,7 +163,7 @@ Every git worktree gets its own stack named after its folder, served at `https:/
 
 ### Files the containers cannot change
 
-The project is mounted read and write, because the containers install dependencies, format code and generate files. Files that run on the Mac outside Docker are mounted read only on top of it: `.git`, `.claude`, `.gemini`, `.github`, `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `.mcp.json`, `.idea`, `bin`, `docker`, `compose.dev.yaml`, `Dockerfile`, `docker-compose.yaml`. Package code running in a container can therefore not plant a git hook or change what `bin/dev` or Compose starts. A new file of that kind needs an entry in `x-project-volumes` in `compose.dev.yaml`, repeated in the services that list their volumes one by one.
+The project is mounted read and write, because the containers install dependencies, format code and generate files. Files that run on the Mac outside Docker are mounted read only on top of it: `.git`, `.claude`, `.agents`, `.codex`, `.github`, `AGENTS.md`, `CLAUDE.md`, `.mcp.json`, `opencode.json`, `.idea`, `bin`, `docker`, `compose.dev.yaml`, `Dockerfile`, `docker-compose.yaml`. Package code running in a container can therefore not plant a git hook or change what `bin/dev` or Compose starts. A new file of that kind needs an entry in `x-project-volumes` in `compose.dev.yaml`, repeated in the services that list their volumes one by one.
 
 Supply chain protection: `bunfig.toml` refuses npm versions younger than seven days, `trustedDependencies` lists the only packages allowed to run install scripts, and Composer's `policy` blocks packages with security advisories or a malware flag.
 

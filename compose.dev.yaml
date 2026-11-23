@@ -13,12 +13,13 @@ x-project-volumes: &project-volumes
   - &project .:/var/www/html
   - &ro-git ./.git:/var/www/html/.git:ro
   - &ro-claude ./.claude:/var/www/html/.claude:ro
-  - &ro-gemini ./.gemini:/var/www/html/.gemini:ro
+  - &ro-agents ./.agents:/var/www/html/.agents:ro
+  - &ro-codex ./.codex:/var/www/html/.codex:ro
   - &ro-github ./.github:/var/www/html/.github:ro
   - &ro-agents-md ./AGENTS.md:/var/www/html/AGENTS.md:ro
   - &ro-claude-md ./CLAUDE.md:/var/www/html/CLAUDE.md:ro
-  - &ro-gemini-md ./GEMINI.md:/var/www/html/GEMINI.md:ro
   - &ro-mcp-json ./.mcp.json:/var/www/html/.mcp.json:ro
+  - &ro-opencode-json ./opencode.json:/var/www/html/opencode.json:ro
   - &ro-idea ./.idea:/var/www/html/.idea:ro
   - &ro-bin ./bin:/var/www/html/bin:ro
   - &ro-docker ./docker:/var/www/html/docker:ro
@@ -111,12 +112,13 @@ services:
       - *project
       - *ro-git
       - *ro-claude
-      - *ro-gemini
+      - *ro-agents
+      - *ro-codex
       - *ro-github
       - *ro-agents-md
       - *ro-claude-md
-      - *ro-gemini-md
       - *ro-mcp-json
+      - *ro-opencode-json
       - *ro-idea
       - *ro-bin
       - *ro-docker
@@ -147,12 +149,13 @@ services:
       - *project
       - *ro-git
       - *ro-claude
-      - *ro-gemini
+      - *ro-agents
+      - *ro-codex
       - *ro-github
       - *ro-agents-md
       - *ro-claude-md
-      - *ro-gemini-md
       - *ro-mcp-json
+      - *ro-opencode-json
       - *ro-idea
       - *ro-bin
       - *ro-docker
